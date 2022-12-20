@@ -72,7 +72,7 @@ const _dateDiff = (earlier: Date, later: Date): {
     const yearDiff = laterYear - earlierYear;
     const monthDiff = laterMonth - earlierMonth;
 
-    if (monthDiff >= 0) {
+    if (monthDiff > 0) {
         // e.g. 2010-01, 2010-03
 
         years = yearDiff;
@@ -86,7 +86,7 @@ const _dateDiff = (earlier: Date, later: Date): {
 
             months = monthDiff - 1;
         }
-    } else {
+    } else if (monthDiff < 0) {
         // e.g. 2009-11, 2010-03
 
         years = yearDiff - 1;
@@ -100,14 +100,29 @@ const _dateDiff = (earlier: Date, later: Date): {
 
             months = monthDiff + 11;
         }
+    } else {
+        // monthDiff === 0, e.g. 2009-12, 2010-12
+
+        // eslint-disable-next-line no-lonely-if
+        if (laterDate >= earlierDate) {
+            // e.g. 2009-12-02, 2010-12-04
+
+            years = yearDiff;
+            months = 0;
+        } else {
+            // e.g. 2009-12-04, 2010-12-02
+
+            years = yearDiff - 1;
+            months = 11;
+        }
     }
 
     if (laterDate >= earlierDate) {
-        // e.g. 2010-01-02, 2010-03-04 or 2009-11-02, 2010-03-04
+        // e.g. 2010-01-02, 2010-03-04 or 2009-11-02, 2010-03-04 or 2009-12-02, 2010-12-04
 
         days = laterDate - earlierDate;
     } else {
-        // e.g. 2010-01-02, 2010-03-01 or 2009-11-02, 2010-03-04
+        // e.g. 2010-01-02, 2010-03-01 or 2009-11-02, 2010-03-04 or 2009-12-04, 2010-12-02
 
         days = laterDate;
     

@@ -262,6 +262,23 @@ describe("complex", () => {
         expect(dateDiff(date, datePlus)).toEqual(expectResult);
     });
 
+    it("b > a, but b.date < a.date & b.month === a.month", () => {
+        const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
+        const datePlus = new Date(2023, 5 - 1, 4, 23, 59, 59, 999);
+
+        const expectResult = zero();
+
+        expectResult.years = 0;
+        expectResult.months = 11;
+        expectResult.days = 29;
+        expectResult.hours = 23;
+        expectResult.minutes = 59;
+        expectResult.seconds = 59;
+        expectResult.milliseconds = 999;
+    
+        expect(dateDiff(date, datePlus)).toEqual(expectResult);
+    });
+
     it("b > a, but b.month < a.month", () => {
         const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
         const datePlus = new Date(2023, 4 - 1, 30, 23, 59, 59, 999);
