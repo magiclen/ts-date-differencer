@@ -1,27 +1,29 @@
 import { dateDiff } from "../src/lib";
 
-const zero = {
-    years: 0,
-    months: 0,
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    milliseconds: 0,
+const zero = () => {
+    return {
+        years: 0,
+        months: 0,
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0,
+    };
 };
 
 describe("basic", () => {
     it("same date", () => {
         const date = new Date();
     
-        expect(dateDiff(date, date)).toEqual(zero);
+        expect(dateDiff(date, date)).toEqual(zero());
     });
     
     it("diff +1 millisecond", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 1);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.milliseconds = 1;
     
@@ -32,7 +34,7 @@ describe("basic", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 1000);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.seconds = 1;
     
@@ -43,7 +45,7 @@ describe("basic", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 60000);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.minutes = 1;
     
@@ -54,7 +56,7 @@ describe("basic", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 3600000);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.hours = 1;
     
@@ -65,7 +67,7 @@ describe("basic", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 86400000);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.days = 1;
     
@@ -76,7 +78,7 @@ describe("basic", () => {
         const date = new Date(2001, 1 - 1, 1);
         const datePlus = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.months = 1;
     
@@ -87,7 +89,7 @@ describe("basic", () => {
         const date = new Date(2001, 1 - 1, 1);
         const datePlus = new Date(date.getFullYear() + 1, date.getMonth(), date.getDate());
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = 1;
     
@@ -98,7 +100,7 @@ describe("basic", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 2, 2, 2);
         const datePlus = new Date(date.getFullYear() + 1, date.getMonth() + 1, date.getDate() + 1, date.getHours() + 1, date.getMinutes() + 1, date.getSeconds() + 1, date.getMilliseconds() + 1);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = 1;
         expectResult.months = 1;
@@ -115,7 +117,7 @@ describe("basic", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 2, 2, 2);
         const datePlus = new Date(date.getFullYear() - 1, date.getMonth() - 1, date.getDate() - 1, date.getHours() - 1, date.getMinutes() - 1, date.getSeconds() - 1, date.getMilliseconds() - 1);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = -1;
         expectResult.months = -1;
@@ -134,7 +136,7 @@ describe("basic 2", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 2, 2, 999);
         const datePlus = new Date(2001, 2 - 1, 2, 2, 2, 3, 0);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.milliseconds = 1;
     
@@ -145,7 +147,7 @@ describe("basic 2", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 2, 59, 2);
         const datePlus = new Date(2001, 2 - 1, 2, 2, 3, 0, 2);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.seconds = 1;
     
@@ -156,7 +158,7 @@ describe("basic 2", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 59, 2, 2);
         const datePlus = new Date(2001, 2 - 1, 2, 3, 0, 2, 2);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.minutes = 1;
     
@@ -167,7 +169,7 @@ describe("basic 2", () => {
         const date = new Date(2001, 2 - 1, 2, 23, 2, 2, 2);
         const datePlus = new Date(2001, 2 - 1, 3, 0, 2, 2, 2);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.hours = 1;
     
@@ -178,7 +180,7 @@ describe("basic 2", () => {
         const date = new Date(2001, 2 - 1, 28, 2, 2, 2, 2);
         const datePlus = new Date(2001, 3 - 1, 1, 2, 2, 2, 2);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.days = 1;
     
@@ -189,7 +191,7 @@ describe("basic 2", () => {
         const date = new Date(2004, 2 - 1, 28, 2, 2, 2, 2);
         const datePlus = new Date(2004, 3 - 1, 1, 2, 2, 2, 2);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.days = 2;
     
@@ -200,7 +202,7 @@ describe("basic 2", () => {
         const date = new Date(2001, 12 - 1, 2, 2, 2, 2, 2);
         const datePlus = new Date(2002, 1 - 1, 2, 2, 2, 2, 2);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.months = 1;
     
@@ -213,7 +215,7 @@ describe("complex", () => {
         const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
         const datePlus = new Date(2023, 10 - 1, 11, 7, 8, 9, 10);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = 1;
         expectResult.months = 5;
@@ -230,7 +232,7 @@ describe("complex", () => {
         const date = new Date(2022, 5 - 1, 5, 5, 0, 0, 0);
         const datePlus = new Date(2023, 10 - 1, 11, 4, 59, 59, 999);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = 1;
         expectResult.months = 5;
@@ -247,7 +249,7 @@ describe("complex", () => {
         const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
         const datePlus = new Date(2023, 10 - 1, 4, 23, 59, 59, 999);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = 1;
         expectResult.months = 4;
@@ -264,7 +266,7 @@ describe("complex", () => {
         const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
         const datePlus = new Date(2023, 4 - 1, 30, 23, 59, 59, 999);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = 0;
         expectResult.months = 11;
@@ -281,7 +283,7 @@ describe("complex", () => {
         const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
         const datePlus = new Date(2023, 4 - 1, 4, 23, 59, 59, 999);
 
-        const expectResult = structuredClone(zero);
+        const expectResult = zero();
 
         expectResult.years = 0;
         expectResult.months = 10;
