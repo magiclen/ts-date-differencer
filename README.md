@@ -7,6 +7,43 @@ Calculate the time interval between two `Date` objects and output the result in 
 
 ## Usage
 
+```typescript
+import { dateDiff } from "date-differencer";
+
+const result = dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
+/*
+{
+    "years": 1,
+    "months": 2,
+    "days": 3,
+    "hours": 0,
+    "minutes": 0,
+    "seconds": 0,
+    "milliseconds": 0
+}
+*/
+```
+
+## Usage for Browsers
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/magiclen/ts-date-differencer/dist/date-differencer.min.js"></script>
+<script>
+    const result = DateDifferencer.dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
+    /*
+    {
+        "years": 1,
+        "months": 2,
+        "days": 3,
+        "hours": 0,
+        "minutes": 0,
+        "seconds": 0,
+        "milliseconds": 0
+    }
+    */
+</script>
+```
+
 ## License
 
 [MIT](LICENSE)

@@ -9,7 +9,46 @@
 </head>
 
 <body>
-    
+    <div>
+        <input type="datetime-local" id="a" />
+        <input type="datetime-local" id="b" />
+    </div>
+    <pre id="result"></pre>
+
+    <script>
+        const a = document.getElementById("a");
+        const b = document.getElementById("b");
+        const result = document.getElementById("result");
+
+        const diff = () => {
+            const dateA = new Date(a.value);
+            const dateB = new Date(b.value);
+
+            try {
+                const r = DateDifferencer.dateDiff(dateA, dateB);
+
+                result.innerHTML = JSON.stringify(r, null, 4);
+            } catch (err) {
+                console.warn(err);
+                result.innerHTML = "";
+            }
+        };
+
+        a.addEventListener("input", diff);
+        b.addEventListener("input", diff);
+
+        const setValue = (element, date) => {
+            const isoString = date.toISOString();
+            element.value = isoString.substring(0, isoString.indexOf("T") + 6);
+        };
+
+        const now = new Date();
+
+        setValue(a, now);
+        setValue(b, now);
+
+        diff();
+    </script>
 </body>
 
 </html>
