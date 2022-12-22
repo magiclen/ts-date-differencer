@@ -39,7 +39,7 @@
 
         const setValue = (element, date) => {
             const isoString = date.toISOString();
-            element.value = isoString.substring(0, isoString.indexOf("T") + 6);
+            element.value = isoString.substring(0, 16);
         };
 
         const now = new Date();
