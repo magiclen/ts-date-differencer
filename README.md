@@ -44,6 +44,12 @@ const result = dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
 </script>
 ```
 
+## Re-exported Functions
+
+```typescript
+export { isLeapYear, getDaysInMonth } from "year-helper";
+```
+
 ## License
 
 [MIT](LICENSE)

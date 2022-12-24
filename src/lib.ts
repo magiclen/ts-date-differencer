@@ -1,30 +1,6 @@
-/**
- * @param year **should be an integer**
- */
-export const isLeapYear = (year: number): boolean => {
-    // eslint-disable-next-line no-extra-parens
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-};
+import { getDaysInMonth } from "year-helper";
 
-/**
- * Calculate how many days in a specific month.
- *
- * @param year **should be an integer**
- * @param month **should be an integer from 1 to 12**
- */
-export const getDaysInMonth = (year: number, month: number): number => {
-    if (month === 2) {
-        return isLeapYear(year) ? 29 : 28;
-    } else {
-        const isOddMonth = month & 1;
-
-        if (month >= 8) {
-            return isOddMonth ? 30 : 31;
-        } else {
-            return isOddMonth ? 31 : 30;
-        }
-    }
-};
+export { isLeapYear, getDaysInMonth } from "year-helper";
 
 const _dateDiff = (earlier: Date, later: Date): {
     years: number,
@@ -76,7 +52,7 @@ const _dateDiff = (earlier: Date, later: Date): {
         // e.g. 2010-01, 2010-03
 
         years = yearDiff;
-    
+
         if (laterDate >= earlierDate) {
             // e.g. 2010-01-02, 2010-03-04
 
@@ -90,7 +66,7 @@ const _dateDiff = (earlier: Date, later: Date): {
         // e.g. 2009-11, 2010-03
 
         years = yearDiff - 1;
-    
+
         if (laterDate >= earlierDate) {
             // e.g. 2009-11-02, 2010-03-04
 
@@ -125,15 +101,15 @@ const _dateDiff = (earlier: Date, later: Date): {
         // e.g. 2010-01-02, 2010-03-01 or 2009-11-02, 2010-03-04 or 2009-12-04, 2010-12-02
 
         days = laterDate;
-    
+
         let daysInMonth;
-    
+
         if (laterMonth > 1) {
             daysInMonth = getDaysInMonth(laterYear, laterMonth - 1);
         } else {
             daysInMonth = getDaysInMonth(laterYear - 1, 12);
         }
-    
+
         if (daysInMonth > earlierDate) {
             days += daysInMonth - earlierDate;
         }
@@ -147,13 +123,13 @@ const _dateDiff = (earlier: Date, later: Date): {
 
     const hours = Math.floor(millisecondsOfDayDiff / 3600000);
     millisecondsOfDayDiff -= hours * 3600000;
-    
+
     const minutes = Math.floor(millisecondsOfDayDiff / 60000);
     millisecondsOfDayDiff -= minutes * 60000;
-    
+
     const seconds = Math.floor(millisecondsOfDayDiff / 1000);
     millisecondsOfDayDiff -= seconds * 1000;
-    
+
     const milliseconds = millisecondsOfDayDiff;
 
     return {

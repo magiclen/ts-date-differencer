@@ -1,6 +1,6 @@
 {
   "name": "date-differencer",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Calculate the time interval between two `Date` objects and output the result in years plus months plus days plus hours plus minutes plus seconds plus milliseconds (instead of representing the same duration in different units). This library is useful for lifespan check and age calculation.",
   "main": "lib/lib.js",
   "types": "lib/lib.d.ts",
@@ -60,5 +60,8 @@
     "typescript": "^4.9.4",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1"
+  },
+  "dependencies": {
+    "year-helper": "^0.1.0"
   }
 }

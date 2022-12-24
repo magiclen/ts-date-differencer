@@ -18,6 +18,10 @@ specifiers:
   typescript: ^4.9.4
   webpack: ^5.75.0
   webpack-cli: ^5.0.1
+  year-helper: ^0.1.0
+
+dependencies:
+  year-helper: 0.1.0
 
 devDependencies:
   '@babel/core': 7.20.7
@@ -4588,6 +4592,11 @@ packages:
       y18n: 5.0.8
       yargs-parser: 21.1.1
     dev: true
+
+  /year-helper/0.1.0:
+    resolution: {integrity: sha512-lRBBqpsvQOmLmmr3ClPjb8Gm8XaFn9UzqdL4jjuBpP9xx++ZMtRpNokPJcJ1akdfCbj/jiMOFn/mIdNwsIURGw==}
+    engines: {node: '>=16'}
+    dev: false
 
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
