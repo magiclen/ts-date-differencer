@@ -1,6 +1,6 @@
 {
   "name": "date-differencer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Calculate the time interval between two `Date` objects and output the result in years plus months plus days plus hours plus minutes plus seconds plus milliseconds (instead of representing the same duration in different units). This library is useful for lifespan check and age calculation.",
   "main": "lib/lib.js",
   "types": "lib/lib.d.ts",
@@ -43,8 +43,9 @@
   },
   "homepage": "https://magiclen.org/date-differencer/",
   "devDependencies": {
-    "@babel/core": "^7.20.5",
+    "@babel/core": "^7.20.7",
     "@babel/preset-env": "^7.20.2",
+    "@babel/preset-typescript": "^7.18.6",
     "@babel/register": "^7.18.9",
     "@types/jest": "^29.2.4",
     "@types/node": "^18.11.17",
@@ -56,7 +57,6 @@
     "rimraf": "^3.0.2",
     "terser-webpack-plugin": "^5.3.6",
     "ts-jest": "^29.0.3",
-    "ts-loader": "^9.4.2",
     "typescript": "^4.9.4",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1"
