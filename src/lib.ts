@@ -1,15 +1,48 @@
 import { getDaysInMonth } from "year-helper";
 
-export { isLeapYear, getDaysInMonth } from "year-helper";
-
-const _dateDiff = (earlier: Date, later: Date): {
-    years: number,
-    months: number,
-    days: number,
+export type TimeDiffResult = {
     hours: number,
     minutes: number,
     seconds: number,
-    milliseconds: number
+    milliseconds: number,
+};
+
+export type DateDiffResult = {
+    years: number,
+    months: number,
+    days: number,
+};
+
+export type DateTimeDiffResult = DateDiffResult & TimeDiffResult;
+
+const _timeDiff = (earlierMillisecondsOfDay: number, laterMillisecondsOfDay: number): TimeDiffResult => {
+    let milliseconds = laterMillisecondsOfDay - earlierMillisecondsOfDay;
+
+    if (laterMillisecondsOfDay < earlierMillisecondsOfDay) {
+        milliseconds += 86400000;
+    }
+
+    const hours = Math.floor(milliseconds / 3600000);
+    milliseconds -= hours * 3600000;
+
+    const minutes = Math.floor(milliseconds / 60000);
+    milliseconds -= minutes * 60000;
+
+    const seconds = Math.floor(milliseconds / 1000);
+    milliseconds -= seconds * 1000;
+
+    return {
+        hours,
+        minutes,
+        seconds,
+        milliseconds,
+    };
+};
+
+const _dateDiff = (earlier: Date, later: Date): {
+    earlierMillisecondsOfDay: number,
+    laterMillisecondsOfDay: number,
+    result: DateDiffResult,
 } => {
     const earlierYear = earlier.getFullYear();
     const earlierMonth = earlier.getMonth() + 1;
@@ -115,65 +148,78 @@ const _dateDiff = (earlier: Date, later: Date): {
         }
     }
 
-    let millisecondsOfDayDiff = laterMillisecondsOfDay - earlierMillisecondsOfDay;
-
-    if (laterMillisecondsOfDay < earlierMillisecondsOfDay) {
-        millisecondsOfDayDiff += 86400000;
-    }
-
-    const hours = Math.floor(millisecondsOfDayDiff / 3600000);
-    millisecondsOfDayDiff -= hours * 3600000;
-
-    const minutes = Math.floor(millisecondsOfDayDiff / 60000);
-    millisecondsOfDayDiff -= minutes * 60000;
-
-    const seconds = Math.floor(millisecondsOfDayDiff / 1000);
-    millisecondsOfDayDiff -= seconds * 1000;
-
-    const milliseconds = millisecondsOfDayDiff;
-
     return {
-        years,
-        months,
-        days,
-        hours,
-        minutes,
-        seconds,
-        milliseconds,
+        earlierMillisecondsOfDay,
+        laterMillisecondsOfDay,
+        result: {
+            years,
+            months,
+            days,
+        },
     };
+};
+
+const negativize = (obj: Record<string, number>) => {
+    for (const [key, value] of Object.entries(obj)) {
+        if (value !== 0) {
+            obj[key] *= -1;
+        }
+    }
+};
+
+const validateDates = (a: Date, b: Date) => {
+    if (isNaN(a.getTime()) || isNaN(b.getTime())) {
+        throw new RangeError("invalid date");
+    }
 };
 
 /**
  * Caltulate `b - a`.
  *
- * @returns a multi-unit object and all fields of it are integers
- * @throws {RangeError}
+ * @returns a key-value object whose keys are date units (in `years`, `months`, etc.) and all values are integers
+ * @throws {RangeError} invalid date
  */
-export const dateDiff = (a: Date, b: Date = new Date()): {
-    years: number,
-    months: number,
-    days: number,
-    hours: number,
-    minutes: number,
-    seconds: number,
-    milliseconds: number
-} => {
+export const dateDiff = (a: Date, b: Date): DateDiffResult => {
     if (b > a) {
-        return _dateDiff(a, b);
+        return _dateDiff(a, b).result;
     } else if (b < a) {
-        const result = _dateDiff(b, a);
+        const result = _dateDiff(b, a).result;
 
-        for (const [key, value] of Object.entries(result) as [keyof typeof result, number][]) {
-            if (value !== 0) {
-                result[key] *= -1;
-            }
-        }
+        negativize(result);
 
         return result;
     } else {
-        if (isNaN(a.getTime()) || isNaN(b.getTime())) {
-            throw new RangeError("invalid date");
-        }
+        validateDates(a, b);
+
+        return {
+            years: 0,
+            months: 0,
+            days: 0,
+        };
+    }
+};
+
+/**
+ * Caltulate `b - a`.
+ *
+ * @returns a key-value object whose keys are date-time units (in `years`, `months`, `hours`, etc.) and all values are integers
+ * @throws {RangeError} invalid date
+ */
+export const dateTimeDiff = (a: Date, b: Date): DateTimeDiffResult => {
+    if (b > a) {
+        const diff = _dateDiff(a, b);
+
+        return Object.assign(diff.result, _timeDiff(diff.earlierMillisecondsOfDay, diff.laterMillisecondsOfDay));
+    } else if (b < a) {
+        const diff = _dateDiff(b, a);
+
+        const result = Object.assign(diff.result, _timeDiff(diff.earlierMillisecondsOfDay, diff.laterMillisecondsOfDay));
+
+        negativize(result);
+
+        return result;
+    } else {
+        validateDates(a, b);
 
         return {
             years: 0,

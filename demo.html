@@ -25,7 +25,7 @@
             const dateB = new Date(b.value);
 
             try {
-                const r = DateDifferencer.dateDiff(dateA, dateB);
+                const r = DateDifferencer.dateTimeDiff(dateA, dateB);
 
                 result.innerHTML = JSON.stringify(r, null, 4);
             } catch (err) {

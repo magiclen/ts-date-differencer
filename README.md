@@ -8,15 +8,24 @@ Calculate the time interval between two `Date` objects and output the result in 
 ## Usage
 
 ```typescript
-import { dateDiff } from "date-differencer";
+import { dateDiff, dateTimeDiff } from "date-differencer";
 
 const result = dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
 /*
 {
     "years": 1,
     "months": 2,
+    "days": 3
+}
+*/
+
+const result = dateTimeDiff(new Date(2022, 5, 6, 0), new Date(2023, 7, 9, 1));
+/*
+{
+    "years": 1,
+    "months": 2,
     "days": 3,
-    "hours": 0,
+    "hours": 1,
     "minutes": 0,
     "seconds": 0,
     "milliseconds": 0
@@ -29,25 +38,28 @@ const result = dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
 ```html
 <script src="https://cdn.jsdelivr.net/gh/magiclen/ts-date-differencer/dist/date-differencer.min.js"></script>
 <script>
-    const result = DateDifferencer.dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
+    const result = DateDifferencer.dateDiff(new Date(2022, 5, 6, 0), new Date(2023, 7, 9, 1));
+    /*
+    {
+        "years": 1,
+        "months": 2,
+        "days": 3
+    }
+    */
+
+    const result = DateDifferencer.dateTimeDiff(new Date(2022, 5, 6, 0), new Date(2023, 7, 9, 1));
     /*
     {
         "years": 1,
         "months": 2,
         "days": 3,
-        "hours": 0,
+        "hours": 1,
         "minutes": 0,
         "seconds": 0,
         "milliseconds": 0
     }
     */
 </script>
-```
-
-## Re-exported Functions
-
-```typescript
-export { isLeapYear, getDaysInMonth } from "year-helper";
 ```
 
 ## License
