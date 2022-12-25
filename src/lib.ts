@@ -13,15 +13,14 @@ export type DateDiffResult = {
     days: number,
 };
 
+export type DayDiffResult = {
+    days: number,
+};
+
 export type DateTimeDiffResult = DateDiffResult & TimeDiffResult;
+export type DayTimeDiffResult = DayDiffResult & TimeDiffResult;
 
-const _timeDiff = (earlierMillisecondsOfDay: number, laterMillisecondsOfDay: number): TimeDiffResult => {
-    let milliseconds = laterMillisecondsOfDay - earlierMillisecondsOfDay;
-
-    if (laterMillisecondsOfDay < earlierMillisecondsOfDay) {
-        milliseconds += 86400000;
-    }
-
+const _millisecondsToUnits = (milliseconds: number): TimeDiffResult => {
     const hours = Math.floor(milliseconds / 3600000);
     milliseconds -= hours * 3600000;
 
@@ -37,6 +36,16 @@ const _timeDiff = (earlierMillisecondsOfDay: number, laterMillisecondsOfDay: num
         seconds,
         milliseconds,
     };
+};
+
+const _timeDiff = (earlierMillisecondsOfDay: number, laterMillisecondsOfDay: number): TimeDiffResult => {
+    let milliseconds = laterMillisecondsOfDay - earlierMillisecondsOfDay;
+
+    if (laterMillisecondsOfDay < earlierMillisecondsOfDay) {
+        milliseconds += 86400000;
+    }
+
+    return _millisecondsToUnits(milliseconds);
 };
 
 const _dateDiff = (earlier: Date, later: Date): {
@@ -159,6 +168,10 @@ const _dateDiff = (earlier: Date, later: Date): {
     };
 };
 
+const _dayDiff = (t: { a: number, b: number }): number => {
+    return (t.b - t.a) / 86400000;
+};
+
 const negativize = (obj: Record<string, number>) => {
     for (const [key, value] of Object.entries(obj)) {
         if (value !== 0) {
@@ -167,10 +180,40 @@ const negativize = (obj: Record<string, number>) => {
     }
 };
 
-const validateDates = (a: Date, b: Date) => {
-    if (isNaN(a.getTime()) || isNaN(b.getTime())) {
+const validateDate = (a: Date) => {
+    if (isNaN(a.getTime())) {
         throw new RangeError("invalid date");
     }
+};
+
+const validateDates = (a: Date, b: Date) => {
+    validateDate(a);
+    validateDate(b);
+};
+
+const validateTimestamp = (t: number) => {
+    if (!Number.isInteger(t)) {
+        throw new RangeError("invalid date");
+    }
+};
+
+const dateToTimestampWithValidation = (a: Date | number): number => {
+    if (typeof a !== "number") {
+        validateDate(a);
+
+        a = a.getTime();
+    } else {
+        validateTimestamp(a);
+    }
+
+    return a;
+};
+
+const datesToTimestampsWithValidation = (a: Date | number, b: Date | number): { a: number, b: number } => {
+    return {
+        a: dateToTimestampWithValidation(a),
+        b: dateToTimestampWithValidation(b),
+    };
 };
 
 /**
@@ -224,6 +267,50 @@ export const dateTimeDiff = (a: Date, b: Date): DateTimeDiffResult => {
         return {
             years: 0,
             months: 0,
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            milliseconds: 0,
+        };
+    }
+};
+
+/**
+ * Caltulate `b - a`.
+ *
+ * @param a a `Date` or a timestamp in milliseconds
+ * @param b a `Date` or a timestamp in milliseconds
+ * @returns the difference in days with the decimal part
+ * @throws {RangeError} invalid date (or timestamp)
+ */
+export const dayDiff = (a: Date | number, b: Date | number): number => {
+    return _dayDiff(datesToTimestampsWithValidation(a, b));
+};
+
+/**
+ * Caltulate `b - a`.
+ *
+ * @returns a key-value object whose keys are `days` and time units (`hours`, `minutes`, etc.) and all values are integers
+ * @throws {RangeError} invalid date (or timestamp)
+ */
+export const dayTimeDiff = (a: Date | number, b: Date | number): DayTimeDiffResult => {
+    const t = datesToTimestampsWithValidation(a, b);
+
+    if (t.b > t.a) {
+        const days = Math.floor(_dayDiff(t));
+
+        return { days: days, ..._timeDiff(t.a % 86400000, t.b % 86400000) };
+    } else if (t.b < t.a) {
+        const days = Math.floor(_dayDiff({ a: t.b, b: t.a }));
+
+        const result = { days: days, ..._timeDiff(t.b % 86400000, t.a % 86400000) };
+
+        negativize(result);
+
+        return result;
+    } else {
+        return {
             days: 0,
             hours: 0,
             minutes: 0,

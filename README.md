@@ -8,9 +8,14 @@ Calculate the time interval between two `Date` objects and output the result in 
 ## Usage
 
 ```typescript
-import { dateDiff, dateTimeDiff } from "date-differencer";
+import { dateDiff, dateTimeDiff, dayDiff, dayTimeDiff } from "date-differencer";
 
-const result = dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
+const a = new Date(2022, 5, 6, 0);
+const b = new Date(2023, 7, 9, 1);
+
+let result;
+
+result = dateDiff(a, b);
 /*
 {
     "years": 1,
@@ -19,12 +24,25 @@ const result = dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9));
 }
 */
 
-const result = dateTimeDiff(new Date(2022, 5, 6, 0), new Date(2023, 7, 9, 1));
+result = dateTimeDiff(a, b);
 /*
 {
     "years": 1,
     "months": 2,
     "days": 3,
+    "hours": 1,
+    "minutes": 0,
+    "seconds": 0,
+    "milliseconds": 0
+}
+*/
+
+result = Math.trunc(dayDiff(a, b)); // (365 + 31 + 30 + 3) = 429
+
+result = dayTimeDiff(a, b);
+/*
+{
+    "days": 429,
     "hours": 1,
     "minutes": 0,
     "seconds": 0,
@@ -44,19 +62,6 @@ const result = dateTimeDiff(new Date(2022, 5, 6, 0), new Date(2023, 7, 9, 1));
         "years": 1,
         "months": 2,
         "days": 3
-    }
-    */
-
-    const result = DateDifferencer.dateTimeDiff(new Date(2022, 5, 6, 0), new Date(2023, 7, 9, 1));
-    /*
-    {
-        "years": 1,
-        "months": 2,
-        "days": 3,
-        "hours": 1,
-        "minutes": 0,
-        "seconds": 0,
-        "milliseconds": 0
     }
     */
 </script>
