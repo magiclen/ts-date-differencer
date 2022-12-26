@@ -49,7 +49,7 @@ console.log(dayTimeDiff(a, b));
 */
 ```
 
-This library can handle leap years correctly. The result of following code is a bit confusing but resonable.
+This library can handle leap years correctly. The result of following code is a bit confusing but reasonable.
 
 ```typescript
 import { dateDiff } from "date-differencer";
