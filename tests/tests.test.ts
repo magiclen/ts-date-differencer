@@ -41,6 +41,21 @@ const zeroDayTime = (overwrite?: Partial<DayTimeDiffResult>): DayTimeDiffResult 
     };
 };
 
+// has side effect
+const neg = (t: Record<string, number> | number): Record<string, number> | number => {
+    if (typeof t === "object") {
+        for (const [key, value] of Object.entries(t)) {
+            if (value !== 0) {
+                t[key] *= -1;
+            }
+        }
+
+        return t;
+    } else {
+        return -t;
+    }
+};
+
 describe("basic", () => {
     it("same date", () => {
         const date = new Date();
@@ -51,7 +66,7 @@ describe("basic", () => {
         expect(dayTimeDiff(date, date)).toEqual(zeroDayTime());
     });
 
-    it("diff +1 millisecond", () => {
+    it("diff 1 millisecond", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 1);
 
@@ -66,9 +81,14 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 second", () => {
+    it("diff 1 second", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 1000);
 
@@ -83,9 +103,14 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 minute", () => {
+    it("diff 1 minute", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 60000);
 
@@ -100,9 +125,14 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 hour", () => {
+    it("diff 1 hour", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 3600000);
 
@@ -117,9 +147,14 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 day", () => {
+    it("diff 1 day", () => {
         const date = new Date();
         const datePlus = new Date(date.getTime() + 86400000);
 
@@ -134,9 +169,14 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(dayDiff(date, datePlus)).toBe(expectDayResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 month", () => {
+    it("diff 1 month", () => {
         const date = new Date(2001, 1 - 1, 1);
         const datePlus = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
@@ -151,9 +191,14 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(dayDiff(date, datePlus)).toBe(expectDayResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 year", () => {
+    it("diff 1 year", () => {
         const date = new Date(2001, 1 - 1, 1);
         const datePlus = new Date(date.getFullYear() + 1, date.getMonth(), date.getDate());
 
@@ -168,9 +213,14 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(dayDiff(date, datePlus)).toBe(expectDayResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 year +1 month +1 day +1 hour +1 minute +1 second +1 millisecond", () => {
+    it("diff 1 year +1 month +1 day +1 hour +1 minute +1 second +1 millisecond", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 2, 2, 2);
         const datePlus = new Date(date.getFullYear() + 1, date.getMonth() + 1, date.getDate() + 1, date.getHours() + 1, date.getMinutes() + 1, date.getSeconds() + 1, date.getMilliseconds() + 1);
 
@@ -197,40 +247,16 @@ describe("basic", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
-    });
 
-    it("diff -1 year -1 month -1 day -1 hour -1 minute -1 second -1 millisecond", () => {
-        const date = new Date(2001, 2 - 1, 2, 2, 2, 2, 2);
-        const datePlus = new Date(date.getFullYear() + 1, date.getMonth() + 1, date.getDate() + 1, date.getHours() + 1, date.getMinutes() + 1, date.getSeconds() + 1, date.getMilliseconds() + 1);
-
-        const overwrite = { years: -1, months: -1, days: -1 };
-        const overwrite2 = {
-            hours: -1,
-            minutes: -1,
-            seconds: -1,
-            milliseconds: -1,
-        };
-
-        const expectDateResult = zeroDate(overwrite);
-        const expectDateTimeResult = zeroDateTime({
-            ...overwrite,
-            ...overwrite2,
-        });
-        const expectDayTruncResult = -(365 + 28 + 1);
-        const expectDayTimeResult = zeroDayTime({
-            days: expectDayTruncResult,
-            ...overwrite2,
-        });
-
-        expect(dateDiff(datePlus, date)).toEqual(expectDateResult);
-        expect(dateTimeDiff(datePlus, date)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(datePlus, date)).toEqual(expectDayTimeResult);
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 });
 
 describe("basic 2", () => {
-    it("diff +1 millisecond", () => {
+    it("diff 1 millisecond", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 2, 2, 999);
         const datePlus = new Date(2001, 2 - 1, 2, 2, 2, 3, 0);
 
@@ -245,9 +271,14 @@ describe("basic 2", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 second", () => {
+    it("diff 1 second", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 2, 59, 2);
         const datePlus = new Date(2001, 2 - 1, 2, 2, 3, 0, 2);
 
@@ -262,9 +293,14 @@ describe("basic 2", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 minute", () => {
+    it("diff 1 minute", () => {
         const date = new Date(2001, 2 - 1, 2, 2, 59, 2, 2);
         const datePlus = new Date(2001, 2 - 1, 2, 3, 0, 2, 2);
 
@@ -279,9 +315,14 @@ describe("basic 2", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 hour", () => {
+    it("diff 1 hour", () => {
         const date = new Date(2001, 2 - 1, 2, 23, 2, 2, 2);
         const datePlus = new Date(2001, 2 - 1, 3, 0, 2, 2, 2);
 
@@ -296,9 +337,14 @@ describe("basic 2", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 day", () => {
+    it("diff 1 day", () => {
         const date = new Date(2001, 2 - 1, 28, 2, 2, 2, 2);
         const datePlus = new Date(2001, 3 - 1, 1, 2, 2, 2, 2);
 
@@ -313,9 +359,14 @@ describe("basic 2", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(dayDiff(date, datePlus)).toBe(expectDayResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +2 day (leap)", () => {
+    it("diff 2 day (leap)", () => {
         const date = new Date(2004, 2 - 1, 28, 2, 2, 2, 2);
         const datePlus = new Date(2004, 3 - 1, 1, 2, 2, 2, 2);
 
@@ -330,9 +381,14 @@ describe("basic 2", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(dayDiff(date, datePlus)).toBe(expectDayResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
-    it("diff +1 month", () => {
+    it("diff 1 month", () => {
         const date = new Date(2001, 12 - 1, 2, 2, 2, 2, 2);
         const datePlus = new Date(2002, 1 - 1, 2, 2, 2, 2, 2);
 
@@ -347,6 +403,11 @@ describe("basic 2", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(dayDiff(date, datePlus)).toBe(expectDayResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 });
 
@@ -378,6 +439,11 @@ describe("complex", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
     it("b > a, but b.time < a.time", () => {
@@ -407,6 +473,11 @@ describe("complex", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
     it("b > a, but b.date < a.date", () => {
@@ -436,6 +507,11 @@ describe("complex", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
     it("b > a, but b.date < a.date & b.month === a.month", () => {
@@ -465,6 +541,11 @@ describe("complex", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
     it("b > a, but b.month < a.month", () => {
@@ -494,6 +575,11 @@ describe("complex", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 
     it("b > a, but b.month < a.month & b.date < a.date", () => {
@@ -523,6 +609,11 @@ describe("complex", () => {
         expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
         expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
         expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(datePlus, date))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
     });
 });
 
@@ -551,5 +642,66 @@ describe("invalid date", () => {
         expect(t2).toThrow(RangeError);
         expect(t3).toThrow(RangeError);
         expect(t4).toThrow(RangeError);
+    });
+});
+
+describe("spesical cases", () => {
+    it("should success", () => {
+        const a = new Date(2020, 2 - 1, 27, 2);
+        const b = new Date(2021, 3 - 1, 2, 1);
+
+        {
+            const overwrite = { years: 1, months: 0, days: 2 };
+            const overwrite2 = {
+                hours: 23,
+                minutes: 0,
+                seconds: 0,
+                milliseconds: 0,
+            };
+
+            const expectDateResult = zeroDate(overwrite);
+            const expectDateTimeResult = zeroDateTime({
+                ...overwrite,
+                ...overwrite2,
+            });
+            const expectDayTruncResult = 368;
+            const expectDayTimeResult = zeroDayTime({
+                days: expectDayTruncResult,
+                ...overwrite2,
+            });
+
+            expect(dateDiff(a, b)).toEqual(expectDateResult);
+            expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
+            expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
+            expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+        }
+
+        // dateDiff(a, b) and dateDiff(b, a) have different absolute days! Because of the opposite moving direction.
+
+        {
+            const overwrite = { years: 1, months: 0, days: 3 };
+            const overwrite2 = {
+                hours: 23,
+                minutes: 0,
+                seconds: 0,
+                milliseconds: 0,
+            };
+
+            const expectDateResult = zeroDate(overwrite);
+            const expectDateTimeResult = zeroDateTime({
+                ...overwrite,
+                ...overwrite2,
+            });
+            const expectDayTruncResult = 368;
+            const expectDayTimeResult = zeroDayTime({
+                days: expectDayTruncResult,
+                ...overwrite2,
+            });
+
+            expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
+            expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
+            expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
+            expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+        }
     });
 });

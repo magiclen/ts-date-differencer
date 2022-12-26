@@ -48,24 +48,26 @@ const _timeDiff = (earlierMillisecondsOfDay: number, laterMillisecondsOfDay: num
     return _millisecondsToUnits(milliseconds);
 };
 
-const _dateDiff = (earlier: Date, later: Date): {
+const _localeTimeMillisecondsOfDay = (date: Date): number => {
+    // eslint-disable-next-line no-extra-parens
+    return (date.getHours() * 3600000) + (date.getMinutes() * 60000) + (date.getSeconds() * 1000) + date.getMilliseconds();
+};
+
+const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     earlierMillisecondsOfDay: number,
     laterMillisecondsOfDay: number,
     result: DateDiffResult,
 } => {
-    const earlierYear = earlier.getFullYear();
-    const earlierMonth = earlier.getMonth() + 1;
-    const earlierDate = earlier.getDate();
+    let earlierYear = earlier.getFullYear();
+    let earlierMonth = earlier.getMonth() + 1;
+    let earlierDate = earlier.getDate();
 
     let laterYear = later.getFullYear();
     let laterMonth = later.getMonth() + 1;
     let laterDate = later.getDate();
 
-    // we don't use `getTime()`, because we need a locale datetime.
-    // eslint-disable-next-line no-extra-parens
-    const laterMillisecondsOfDay = (later.getHours() * 3600000) + (later.getMinutes() * 60000) + (later.getSeconds() * 1000) + later.getMilliseconds();
-    // eslint-disable-next-line no-extra-parens
-    const earlierMillisecondsOfDay = (earlier.getHours() * 3600000) + (earlier.getMinutes() * 60000) + (earlier.getSeconds() * 1000) + earlier.getMilliseconds();
+    const laterMillisecondsOfDay = _localeTimeMillisecondsOfDay(later);
+    const earlierMillisecondsOfDay = _localeTimeMillisecondsOfDay(earlier);
 
     let years;
     let months;
@@ -74,16 +76,33 @@ const _dateDiff = (earlier: Date, later: Date): {
     if (laterMillisecondsOfDay < earlierMillisecondsOfDay) {
         // e.g. 12:00, 11:59
 
-        // decrease a day
-        if (laterDate > 1) {
-            laterDate -= 1;
-        } else if (laterMonth > 1) {
-            laterMonth -= 1;
-            laterDate = getDaysInMonth(laterYear, laterMonth);
+        if (startFromLater) {
+            // increase a day from the earilier date
+
+            if (earlierDate < getDaysInMonth(earlierYear, earlierMonth)) {
+                earlierDate += 1;
+            } else if (earlierMonth < 12) {
+                earlierMonth += 1;
+                earlierDate = 1;
+            } else {
+                earlierYear += 1;
+                earlierMonth = 1;
+                earlierDate = 1;
+            }
         } else {
-            laterYear -= 1;
-            laterMonth = 12;
-            laterDate = 31;
+            // decrease a day from the later date
+
+            // eslint-disable-next-line no-lonely-if
+            if (laterDate > 1) {
+                laterDate -= 1;
+            } else if (laterMonth > 1) {
+                laterMonth -= 1;
+                laterDate = getDaysInMonth(laterYear, laterMonth);
+            } else {
+                laterYear -= 1;
+                laterMonth = 12;
+                laterDate = 31;
+            }
         }
     }
 
@@ -144,12 +163,20 @@ const _dateDiff = (earlier: Date, later: Date): {
 
         days = laterDate;
 
+        let targetYear;
+
+        if (startFromLater) {
+            targetYear = earlierYear;
+        } else {
+            targetYear = laterYear;
+        }
+
         let daysInMonth;
 
         if (laterMonth > 1) {
-            daysInMonth = getDaysInMonth(laterYear, laterMonth - 1);
+            daysInMonth = getDaysInMonth(targetYear, laterMonth - 1);
         } else {
-            daysInMonth = getDaysInMonth(laterYear - 1, 12);
+            daysInMonth = getDaysInMonth(targetYear - 1, 12);
         }
 
         if (daysInMonth > earlierDate) {
@@ -217,22 +244,22 @@ const datesToTimestampsWithValidation = (a: Date | number, b: Date | number): { 
 };
 
 /**
- * Caltulate `b - a`.
+ * Caltulate the difference bewteen two `Date` objects.
  *
  * @returns a key-value object whose keys are date units (in `years`, `months`, etc.) and all values are integers
  * @throws {RangeError} invalid date
  */
-export const dateDiff = (a: Date, b: Date): DateDiffResult => {
-    if (b > a) {
-        return _dateDiff(a, b).result;
-    } else if (b < a) {
-        const result = _dateDiff(b, a).result;
+export const dateDiff = (from: Date, to: Date): DateDiffResult => {
+    if (to > from) {
+        return _dateDiff(from, to, false).result;
+    } else if (to < from) {
+        const result = _dateDiff(to, from, true).result;
 
         negativize(result);
 
         return result;
     } else {
-        validateDates(a, b);
+        validateDates(from, to);
 
         return {
             years: 0,
@@ -243,18 +270,18 @@ export const dateDiff = (a: Date, b: Date): DateDiffResult => {
 };
 
 /**
- * Caltulate `b - a`.
+ * Caltulate the difference bewteen two `Date` objects.
  *
  * @returns a key-value object whose keys are date-time units (in `years`, `months`, `hours`, etc.) and all values are integers
  * @throws {RangeError} invalid date
  */
-export const dateTimeDiff = (a: Date, b: Date): DateTimeDiffResult => {
-    if (b > a) {
-        const diff = _dateDiff(a, b);
+export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
+    if (to > from) {
+        const diff = _dateDiff(from, to, false);
 
         return Object.assign(diff.result, _timeDiff(diff.earlierMillisecondsOfDay, diff.laterMillisecondsOfDay));
-    } else if (b < a) {
-        const diff = _dateDiff(b, a);
+    } else if (to < from) {
+        const diff = _dateDiff(to, from, true);
 
         const result = Object.assign(diff.result, _timeDiff(diff.earlierMillisecondsOfDay, diff.laterMillisecondsOfDay));
 
@@ -262,7 +289,7 @@ export const dateTimeDiff = (a: Date, b: Date): DateTimeDiffResult => {
 
         return result;
     } else {
-        validateDates(a, b);
+        validateDates(from, to);
 
         return {
             years: 0,
@@ -277,7 +304,7 @@ export const dateTimeDiff = (a: Date, b: Date): DateTimeDiffResult => {
 };
 
 /**
- * Caltulate `b - a`.
+ * Caltulate the difference bewteen two `Date` objects or timestamps.
  *
  * @param a a `Date` or a timestamp in milliseconds
  * @param b a `Date` or a timestamp in milliseconds
@@ -289,7 +316,7 @@ export const dayDiff = (a: Date | number, b: Date | number): number => {
 };
 
 /**
- * Caltulate `b - a`.
+ * Caltulate the difference bewteen two `Date` objects or timestamps.
  *
  * @returns a key-value object whose keys are `days` and time units (`hours`, `minutes`, etc.) and all values are integers
  * @throws {RangeError} invalid date (or timestamp)

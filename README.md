@@ -49,6 +49,42 @@ console.log(dayTimeDiff(a, b));
 */
 ```
 
+This library can handle leap years correctly. The result of following code is a bit confusing but resonable.
+
+```typescript
+import { dateDiff } from "date-differencer";
+
+const a = new Date("2020-02-27");
+const b = new Date("2021-03-01");
+
+console.log(dateDiff(a, b));
+/*
+{
+    "years": 1,
+    "months": 0,
+    "days": 2
+}
+
+Explanation:
+    1. 2020-02-27 + 1 year -> 2021-02-27
+    2. 2021-02-27 + 2 days -> 2021-03-01 (2021-02 has 28 days)
+ */
+
+console.log(dateDiff(b, a));
+/*
+{
+    "years": -1,
+    "months": 0,
+    "days": -3
+}
+
+Explanation:
+    1. 2021-03-01 - 1 year -> 2020-03-01
+    2. 2020-03-01 - 3 days -> 2020-02-27 (2020-02 has 29 days)
+ */
+```
+
+
 ## Usage for Browsers
 
 ```html
