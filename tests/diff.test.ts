@@ -6,7 +6,13 @@ import {
     DateDiffResult,
     DateTimeDiffResult,
     DayTimeDiffResult,
+    addDateTimeDiff,
+    addDayTimeDiff,
 } from "../src/lib";
+
+const randomDate = (): Date => {
+    return new Date(Math.trunc(Math.random() * 3000000000000) - 1000000000000);
+};
 
 const zeroDate = (overwrite?: Partial<DateDiffResult>): DateDiffResult => {
     return {
@@ -413,10 +419,10 @@ describe("basic 2", () => {
 
 describe("complex", () => {
     it("b > a", () => {
-        const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
-        const datePlus = new Date(2023, 10 - 1, 11, 7, 8, 9, 10);
+        const date = new Date(2022, 8 - 1, 5, 0, 0, 0, 0);
+        const datePlus = new Date(2023, 11 - 1, 11, 7, 8, 9, 10);
 
-        const overwrite = { years: 1, months: 5, days: 6 };
+        const overwrite = { years: 1, months: 3, days: 6 };
         const overwrite2 = {
             hours: 7,
             minutes: 8,
@@ -429,7 +435,7 @@ describe("complex", () => {
             ...overwrite,
             ...overwrite2,
         });
-        const expectDayTruncResult = 365 + 31 + 30 + 31 + 31 + 30 + 6;
+        const expectDayTruncResult = 365 + (31 - 5) + 30 + 31 + 11;
         const expectDayTimeResult = zeroDayTime({
             days: expectDayTruncResult,
             ...overwrite2,
@@ -447,10 +453,10 @@ describe("complex", () => {
     });
 
     it("b > a, but b.time < a.time", () => {
-        const date = new Date(2022, 5 - 1, 5, 5, 0, 0, 0);
-        const datePlus = new Date(2023, 10 - 1, 11, 4, 59, 59, 999);
+        const date = new Date(2022, 8 - 1, 5, 5, 0, 0, 0);
+        const datePlus = new Date(2023, 11 - 1, 11, 4, 59, 59, 999);
 
-        const overwrite = { years: 1, months: 5, days: 5 };
+        const overwrite = { years: 1, months: 3, days: 5 };
         const overwrite2 = {
             hours: 23,
             minutes: 59,
@@ -463,7 +469,7 @@ describe("complex", () => {
             ...overwrite,
             ...overwrite2,
         });
-        const expectDayTruncResult = 365 + 31 + 30 + 31 + 31 + 30 + 5;
+        const expectDayTruncResult = 365 + (31 - 5) + 30 + 31 + 10;
         const expectDayTimeResult = zeroDayTime({
             days: expectDayTruncResult,
             ...overwrite2,
@@ -481,10 +487,10 @@ describe("complex", () => {
     });
 
     it("b > a, but b.date < a.date", () => {
-        const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
-        const datePlus = new Date(2023, 10 - 1, 4, 23, 59, 59, 999);
+        const date = new Date(2022, 8 - 1, 5, 0, 0, 0, 0);
+        const datePlus = new Date(2023, 11 - 1, 4, 23, 59, 59, 999);
 
-        const overwrite = { years: 1, months: 4, days: 29 };
+        const overwrite = { years: 1, months: 2, days: 30 };
         const overwrite2 = {
             hours: 23,
             minutes: 59,
@@ -497,7 +503,7 @@ describe("complex", () => {
             ...overwrite,
             ...overwrite2,
         });
-        const expectDayTruncResult = 365 + 31 + 30 + 31 + 31 + (30 - 5) + 4;
+        const expectDayTruncResult = 365 + (31 - 5) + 30 + 31 + 4;
         const expectDayTimeResult = zeroDayTime({
             days: expectDayTruncResult,
             ...overwrite2,
@@ -515,10 +521,10 @@ describe("complex", () => {
     });
 
     it("b > a, but b.date < a.date & b.month === a.month", () => {
-        const date = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
-        const datePlus = new Date(2023, 5 - 1, 4, 23, 59, 59, 999);
+        const date = new Date(2022, 8 - 1, 5, 0, 0, 0, 0);
+        const datePlus = new Date(2023, 8 - 1, 4, 23, 59, 59, 999);
 
-        const overwrite = { years: 0, months: 11, days: 29 };
+        const overwrite = { years: 0, months: 11, days: 30 };
         const overwrite2 = {
             hours: 23,
             minutes: 59,
@@ -703,5 +709,202 @@ describe("spesical cases", () => {
             expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
             expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
         }
+    });
+
+    it("should success", () => {
+        const a = new Date(2022, 5 - 1, 5, 0, 0, 0, 0);
+        const b = new Date(2023, 5 - 1, 4, 23, 59, 59, 999);
+
+        {
+            const overwrite = { years: 0, months: 11, days: 29 };
+            const overwrite2 = {
+                hours: 23,
+                minutes: 59,
+                seconds: 59,
+                milliseconds: 999,
+            };
+
+            const expectDateResult = zeroDate(overwrite);
+            const expectDateTimeResult = zeroDateTime({
+                ...overwrite,
+                ...overwrite2,
+            });
+            const expectDayTruncResult = 364;
+            const expectDayTimeResult = zeroDayTime({
+                days: expectDayTruncResult,
+                ...overwrite2,
+            });
+
+            expect(dateDiff(a, b)).toEqual(expectDateResult);
+            expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
+            expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
+            expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+        }
+
+        // dateDiff(a, b) and dateDiff(b, a) have different absolute days! Because of the opposite moving direction.
+
+        {
+            const overwrite = { years: 0, months: 11, days: 30 };
+            const overwrite2 = {
+                hours: 23,
+                minutes: 59,
+                seconds: 59,
+                milliseconds: 999,
+            };
+
+            const expectDateResult = zeroDate(overwrite);
+            const expectDateTimeResult = zeroDateTime({
+                ...overwrite,
+                ...overwrite2,
+            });
+            const expectDayTruncResult = 364;
+            const expectDayTimeResult = zeroDayTime({
+                days: expectDayTruncResult,
+                ...overwrite2,
+            });
+
+            expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
+            expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
+            expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
+            expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+        }
+    });
+
+    it("should success", () => {
+        const a = new Date(2022, 1 - 1, 30, 0, 0, 0, 0);
+        const b = new Date(2023, 3 - 1, 4, 23, 59, 59, 999);
+
+        {
+            const overwrite = { years: 1, months: 1, days: 4 };
+            const overwrite2 = {
+                hours: 23,
+                minutes: 59,
+                seconds: 59,
+                milliseconds: 999,
+            };
+
+            const expectDateResult = zeroDate(overwrite);
+            const expectDateTimeResult = zeroDateTime({
+                ...overwrite,
+                ...overwrite2,
+            });
+            const expectDayTruncResult = 398;
+            const expectDayTimeResult = zeroDayTime({
+                days: expectDayTruncResult,
+                ...overwrite2,
+            });
+
+            expect(dateDiff(a, b)).toEqual(expectDateResult);
+            expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
+            expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
+            expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+        }
+
+        // dateDiff(a, b) and dateDiff(b, a) have different absolute days! Because of the opposite moving direction.
+
+        {
+            const overwrite = { years: 1, months: 1, days: 5 };
+            const overwrite2 = {
+                hours: 23,
+                minutes: 59,
+                seconds: 59,
+                milliseconds: 999,
+            };
+
+            const expectDateResult = zeroDate(overwrite);
+            const expectDateTimeResult = zeroDateTime({
+                ...overwrite,
+                ...overwrite2,
+            });
+            const expectDayTruncResult = 398;
+            const expectDayTimeResult = zeroDayTime({
+                days: expectDayTruncResult,
+                ...overwrite2,
+            });
+
+            expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
+            expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
+            expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
+            expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+        }
+    });
+
+    it("should success", () => {
+        const a = new Date(2022, 1 - 1, 30, 0, 0, 0, 0);
+        const b = new Date(2023, 3 - 1, 29, 23, 59, 59, 999);
+
+        const overwrite = { years: 1, months: 1, days: 29 };
+        const overwrite2 = {
+            hours: 23,
+            minutes: 59,
+            seconds: 59,
+            milliseconds: 999,
+        };
+
+        const expectDateResult = zeroDate(overwrite);
+        const expectDateTimeResult = zeroDateTime({
+            ...overwrite,
+            ...overwrite2,
+        });
+        const expectDayTruncResult = 423;
+        const expectDayTimeResult = zeroDayTime({
+            days: expectDayTruncResult,
+            ...overwrite2,
+        });
+
+        expect(dateDiff(a, b)).toEqual(expectDateResult);
+        expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
+        expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
+        expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+
+        expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
+        expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
+        expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
+        expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+    });
+});
+
+describe("add diff back", () => {
+    it("addDateTimeDiff (randomly run tests for 1000 times)", () => {
+        for (let i = 0;i < 1000;i++) {
+            const a = randomDate();
+            const b = randomDate();
+
+            const diff = dateTimeDiff(a, b);
+
+            expect(addDateTimeDiff(a, diff)).toEqual(b);
+        }
+    });
+
+    it("addDayTimeDiff (randomly run tests for 1000 times)", () => {
+        for (let i = 0;i < 1000;i++) {
+            const a = randomDate();
+            const b = randomDate();
+
+            const diff = dayTimeDiff(a, b);
+
+            expect(addDayTimeDiff(a, diff)).toEqual(b);
+        }
+    });
+});
+
+describe("add large diff", () => {
+    it("addDateTimeDiff", () => {
+        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { months: 25 })).toEqual(new Date(2002, 2 - 1, 5));
+        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 })).toEqual(new Date(2000, 2 - 1, 1));
+        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 + 29 })).toEqual(new Date(2000, 3 - 1, 1));
+        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { hours: 25 })).toEqual(new Date(2000, 1 - 1, 6, 1));
+        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { minutes: 61 })).toEqual(new Date(2000, 1 - 1, 5, 1, 1));
+        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { seconds: 61 })).toEqual(new Date(2000, 1 - 1, 5, 0, 1, 1));
+        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { milliseconds: 1001 })).toEqual(new Date(2000, 1 - 1, 5, 0, 0, 1, 1));
+    });
+
+    it("addDayTimeDiff", () => {
+        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 })).toEqual(new Date(2000, 2 - 1, 1));
+        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 + 29 })).toEqual(new Date(2000, 3 - 1, 1));
+        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { hours: 25 })).toEqual(new Date(2000, 1 - 1, 6, 1));
+        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { minutes: 61 })).toEqual(new Date(2000, 1 - 1, 5, 1, 1));
+        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { seconds: 61 })).toEqual(new Date(2000, 1 - 1, 5, 0, 1, 1));
+        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { milliseconds: 1001 })).toEqual(new Date(2000, 1 - 1, 5, 0, 0, 1, 1));
     });
 });

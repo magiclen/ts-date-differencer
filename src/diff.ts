@@ -55,6 +55,21 @@ const _localeTimeMillisecondsOfDay = (date: Date): number => {
     return (date.getHours() * 3600000) + (date.getMinutes() * 60000) + (date.getSeconds() * 1000) + date.getMilliseconds();
 };
 
+const _timeMillisecondsOfDay = (timestamp: number): number => {
+    if (timestamp >= 0) {
+        return timestamp % 86400000;
+    } else {
+        // eslint-disable-next-line no-extra-parens
+        let t = 86400000 + (timestamp % 86400000);
+
+        if (t === 86400000) {
+            t = 0;
+        }
+
+        return t;
+    }
+};
+
 const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     earlierMillisecondsOfDay: number,
     laterMillisecondsOfDay: number,
@@ -76,17 +91,23 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     let days;
 
     if (laterMillisecondsOfDay < earlierMillisecondsOfDay) {
-        // e.g. 12:00, 11:59
+        // e.g. 12:00 to 11:59
 
         if (startFromLater) {
             // increase a day from the earilier date
 
             if (earlierDate < getDaysInMonth(earlierYear, earlierMonth)) {
+                // e.g. 2020-01-12 12:00 to 2022-02-15 11:59
+
                 earlierDate += 1;
             } else if (earlierMonth < 12) {
+                // e.g. 2020-01-31 12:00 to 2022-02-15 11:59
+
                 earlierMonth += 1;
                 earlierDate = 1;
             } else {
+                // e.g. 2020-12-31 12:00 to 2022-02-15 11:59
+
                 earlierYear += 1;
                 earlierMonth = 1;
                 earlierDate = 1;
@@ -96,11 +117,17 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
 
             // eslint-disable-next-line no-lonely-if
             if (laterDate > 1) {
+                // e.g. 2020-01-12 12:00 to 2022-02-15 11:59
+
                 laterDate -= 1;
             } else if (laterMonth > 1) {
+                // e.g. 2020-01-12 12:00 to 2022-02-01 11:59
+
                 laterMonth -= 1;
                 laterDate = getDaysInMonth(laterYear, laterMonth);
             } else {
+                // e.g. 2020-01-12 12:00 to 2022-01-01 11:59
+                
                 laterYear -= 1;
                 laterMonth = 12;
                 laterDate = 31;
@@ -112,44 +139,44 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     const monthDiff = laterMonth - earlierMonth;
 
     if (monthDiff > 0) {
-        // e.g. 2010-01, 2010-03
+        // e.g. 2010-01 to 2010-03
 
         years = yearDiff;
 
         if (laterDate >= earlierDate) {
-            // e.g. 2010-01-02, 2010-03-04
+            // e.g. 2010-01-02 to 2010-03-04
 
             months = monthDiff;
         } else {
-            // e.g. 2010-01-02, 2010-03-01
+            // e.g. 2010-01-02 to 2010-03-01
 
             months = monthDiff - 1;
         }
     } else if (monthDiff < 0) {
-        // e.g. 2009-11, 2010-03
+        // e.g. 2009-11 to 2010-03
 
         years = yearDiff - 1;
 
         if (laterDate >= earlierDate) {
-            // e.g. 2009-11-02, 2010-03-04
+            // e.g. 2009-11-02 to 2010-03-04
 
             months = monthDiff + 12;
         } else {
-            // e.g. 2009-11-02, 2010-03-04
+            // e.g. 2009-11-02 to 2010-03-04
 
             months = monthDiff + 11;
         }
     } else {
-        // monthDiff === 0, e.g. 2009-12, 2010-12
+        // monthDiff === 0, e.g. 2009-12 to 2010-12
 
         // eslint-disable-next-line no-lonely-if
         if (laterDate >= earlierDate) {
-            // e.g. 2009-12-02, 2010-12-04
+            // e.g. 2009-12-02 to 2010-12-04
 
             years = yearDiff;
             months = 0;
         } else {
-            // e.g. 2009-12-04, 2010-12-02
+            // e.g. 2009-12-04 to 2010-12-02
 
             years = yearDiff - 1;
             months = 11;
@@ -157,32 +184,39 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     }
 
     if (laterDate >= earlierDate) {
-        // e.g. 2010-01-02, 2010-03-04 or 2009-11-02, 2010-03-04 or 2009-12-02, 2010-12-04
-
-        days = laterDate - earlierDate;
-    } else {
-        // e.g. 2010-01-02, 2010-03-01 or 2009-11-02, 2010-03-04 or 2009-12-04, 2010-12-02
-
-        days = laterDate;
-
-        let targetYear;
+        // e.g. 2010-01-02 to 2010-03-04, 2009-11-02 to 2010-03-04, 2009-12-02 to 2010-12-04
 
         if (startFromLater) {
-            targetYear = earlierYear;
+            days = Math.min(laterDate, getDaysInMonth(earlierYear, earlierMonth)) - earlierDate;
         } else {
-            targetYear = laterYear;
+            days = laterDate - earlierDate;
         }
+    } else {
+        // e.g. 2010-01-02 to 2010-03-01, 2009-11-02 to 2010-03-04, 2009-12-04 to 2010-12-02
+        
+        // eslint-disable-next-line no-lonely-if
+        if (startFromLater) {
+            if (earlierMonth < 12) {
+                laterDate = Math.min(laterDate, getDaysInMonth(earlierYear, earlierMonth + 1));
+            } else {
+                // we don't need to handle this because the laterDate cannot be bigger than 31 (January has 31 days)
+            }
 
-        let daysInMonth;
-
-        if (laterMonth > 1) {
-            daysInMonth = getDaysInMonth(targetYear, laterMonth - 1);
+            days = laterDate + (getDaysInMonth(earlierYear, earlierMonth) - earlierDate);
         } else {
-            daysInMonth = getDaysInMonth(targetYear - 1, 12);
-        }
+            let daysInMonth: number;
 
-        if (daysInMonth > earlierDate) {
-            days += daysInMonth - earlierDate;
+            if (laterMonth > 1) {
+                daysInMonth = getDaysInMonth(laterYear, laterMonth - 1);
+            } else {
+                daysInMonth = 31; // getDaysInMonth(laterYear - 1, 12)
+            }
+
+            if (daysInMonth > earlierDate) {
+                days = laterDate + (daysInMonth - earlierDate);
+            } else {
+                days = laterDate;
+            }
         }
     }
 
@@ -235,13 +269,13 @@ export const dateDiff = (from: Date, to: Date): DateDiffResult => {
  */
 export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
     if (to > from) {
-        const diff = _dateDiff(from, to, false);
+        const { result: diff, earlierMillisecondsOfDay, laterMillisecondsOfDay } = _dateDiff(from, to, false);
 
-        return Object.assign(diff.result, _timeDiff(diff.earlierMillisecondsOfDay, diff.laterMillisecondsOfDay));
+        return Object.assign(diff, _timeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay));
     } else if (to < from) {
-        const diff = _dateDiff(to, from, true);
+        const { result: diff, earlierMillisecondsOfDay, laterMillisecondsOfDay } = _dateDiff(to, from, true);
 
-        const result = Object.assign(diff.result, _timeDiff(diff.earlierMillisecondsOfDay, diff.laterMillisecondsOfDay));
+        const result = Object.assign(diff, _timeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay));
 
         negativize(result);
 
@@ -285,11 +319,11 @@ export const dayTimeDiff = (a: Date | number, b: Date | number): DayTimeDiffResu
     if (t.b > t.a) {
         const days = Math.floor(_dayDiff(t));
 
-        return { days: days, ..._timeDiff(t.a % 86400000, t.b % 86400000) };
+        return { days: days, ..._timeDiff(_timeMillisecondsOfDay(t.a), _timeMillisecondsOfDay(t.b)) };
     } else if (t.b < t.a) {
         const days = Math.floor(_dayDiff({ a: t.b, b: t.a }));
 
-        const result = { days: days, ..._timeDiff(t.b % 86400000, t.a % 86400000) };
+        const result = { days: days, ..._timeDiff(_timeMillisecondsOfDay(t.b), _timeMillisecondsOfDay(t.a)) };
 
         negativize(result);
 

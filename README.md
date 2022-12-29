@@ -8,7 +8,10 @@ Calculate the time interval between two `Date` objects and output the result in 
 ## Usage
 
 ```typescript
-import { dateDiff, dateTimeDiff, dayDiff, dayTimeDiff } from "date-differencer";
+import {
+    dateDiff, dateTimeDiff, dayDiff, dayTimeDiff,
+    addDateTimeDiff, addDayTimeDiff
+} from "date-differencer";
 
 const a = new Date(2022, 5, 6, 0);
 const b = new Date(2023, 7, 9, 1);
@@ -47,9 +50,12 @@ console.log(dayTimeDiff(a, b));
     "milliseconds": 0
 }
 */
+
+console.log(addDateTimeDiff(a, dateTimeDiff(a, b))); // the same as b
+console.log(addDayTimeDiff(a, dayTimeDiff(a, b)));   // the same as b
 ```
 
-This library can handle leap years correctly. The result of following code is a bit confusing but reasonable.
+This library can handle leap years and odd/even number of days in a month correctly. The result of following code is a bit confusing but reasonable.
 
 ```typescript
 import { dateDiff } from "date-differencer";
@@ -83,7 +89,6 @@ Explanation:
     2. 2020-03-01 - 3 days -> 2020-02-27 (2020-02 has 29 days)
  */
 ```
-
 
 ## Usage for Browsers
 
