@@ -74,7 +74,7 @@ console.log(dateDiff(a, b));
 Explanation:
     1. 2020-02-27 + 1 year -> 2021-02-27
     2. 2021-02-27 + 2 days -> 2021-03-01 (2021-02 has 28 days)
- */
+*/
 
 console.log(dateDiff(b, a));
 /*
@@ -87,7 +87,7 @@ console.log(dateDiff(b, a));
 Explanation:
     1. 2021-03-01 - 1 year -> 2020-03-01
     2. 2020-03-01 - 3 days -> 2020-02-27 (2020-02 has 29 days)
- */
+*/
 ```
 
 ## Usage for Browsers
