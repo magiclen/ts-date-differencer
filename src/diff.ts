@@ -236,7 +236,7 @@ const _dayDiff = (t: { a: number, b: number }): number => {
 };
 
 /**
- * Caltulate the difference bewteen two `Date` objects.
+ * Calculate the difference between two `Date` objects.
  *
  * @returns a key-value object whose keys are date units (in `years`, `months`, etc.) and all values are integers
  * @throws {RangeError} invalid date
@@ -262,7 +262,7 @@ export const dateDiff = (from: Date, to: Date): DateDiffResult => {
 };
 
 /**
- * Caltulate the difference bewteen two `Date` objects.
+ * Calculate the difference between two `Date` objects.
  *
  * @returns a key-value object whose keys are date-time units (in `years`, `months`, `hours`, etc.) and all values are integers
  * @throws {RangeError} invalid date
@@ -296,7 +296,7 @@ export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
 };
 
 /**
- * Caltulate the difference bewteen two `Date` objects or timestamps.
+ * Calculate the difference between two `Date` objects or timestamps.
  *
  * @param a a `Date` or a timestamp in milliseconds
  * @param b a `Date` or a timestamp in milliseconds
@@ -308,7 +308,7 @@ export const dayDiff = (a: Date | number, b: Date | number): number => {
 };
 
 /**
- * Caltulate the difference bewteen two `Date` objects or timestamps.
+ * Calculate the difference between two `Date` objects or timestamps.
  *
  * @returns a key-value object whose keys are `days` and time units (`hours`, `minutes`, etc.) and all values are integers
  * @throws {RangeError} invalid date (or timestamp)
