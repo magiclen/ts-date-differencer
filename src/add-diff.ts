@@ -21,7 +21,7 @@ export const addDateTimeDiff = (from: Date, dateTimeDiff: Partial<DateTimeDiffRe
 
         if (month >= 12) {
             year += Math.trunc(month / 12);
-            month = month % 12;
+            month %= 12;
         } else if (month < 0) {
             year += Math.trunc(month / 12) - 1;
 
@@ -70,7 +70,7 @@ export const addDateTimeDiff = (from: Date, dateTimeDiff: Partial<DateTimeDiffRe
                 const daysInMonth = getDaysInMonth(year, month + 1);
     
                 if (-date < daysInMonth) {
-                    date = daysInMonth + date;
+                    date += daysInMonth;
                     break;
                 }
     
