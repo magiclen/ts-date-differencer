@@ -94,7 +94,7 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
         // e.g. 12:00 to 11:59
 
         if (startFromLater) {
-            // increase a day from the earilier date
+            // increase a day from the earlier date
 
             if (earlierDate < getDaysInMonth(earlierYear, earlierMonth)) {
                 // e.g. 2020-01-12 12:00 to 2022-02-15 11:59
