@@ -92,19 +92,9 @@ Explanation:
 
 ## Usage for Browsers
 
-```html
-<script src="https://cdn.jsdelivr.net/gh/magiclen/ts-date-differencer/dist/date-differencer.min.js"></script>
-<script>
-    console.log(DateDifferencer.dateDiff(new Date(2022, 5, 6), new Date(2023, 7, 9)));
-    /*
-    {
-        "years": 1,
-        "months": 2,
-        "days": 3
-    }
-    */
-</script>
-```
+[Source](demo.html)
+
+[Demo Page](https://rawcdn.githack.com/magiclen/ts-date-differencer/master/demo.html)
 
 ## License
 
