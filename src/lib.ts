@@ -1,2 +1,2 @@
-export * from "./diff";
-export * from "./add-diff";
+export * from "./diff.js";
+export * from "./add-diff.js";

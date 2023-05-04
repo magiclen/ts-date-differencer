@@ -8,7 +8,7 @@ import {
     DayTimeDiffResult,
     addDateTimeDiff,
     addDayTimeDiff,
-} from "../src/lib";
+} from "../src/lib.js";
 
 const randomDate = (): Date => {
     return new Date(Math.trunc(Math.random() * 3000000000000) - 1000000000000);

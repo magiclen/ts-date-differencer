@@ -1,6 +1,6 @@
 import { getDaysInMonth } from "year-helper";
 
-import { DateTimeDiffResult, DayTimeDiffResult } from "./diff";
+import { DateTimeDiffResult, DayTimeDiffResult } from "./diff.js";
 
 /**
  * Calculate `from` + `dateTimeDiff`.

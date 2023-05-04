@@ -1,6 +1,6 @@
 import { getDaysInMonth } from "year-helper";
 
-import { negativize, validateDates, datesToTimestampsWithValidation } from "./functions";
+import { negativize, validateDates, datesToTimestampsWithValidation } from "./functions.js";
 
 export type TimeDiffResult = {
     hours: number,
