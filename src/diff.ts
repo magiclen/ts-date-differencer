@@ -1,7 +1,8 @@
 import { getDaysInMonth } from "year-helper";
 
-import { negativize, validateDates, datesToTimestampsWithValidation } from "./functions.js";
+import { datesToTimestampsWithValidation, negativize, validateDates } from "./functions.js";
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type TimeDiffResult = {
     hours: number,
     minutes: number,
@@ -9,13 +10,15 @@ export type TimeDiffResult = {
     milliseconds: number,
 };
 
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type DateDiffResult = {
     years: number,
     months: number,
     days: number,
 };
 
-export type DayDiffResult = {
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type DayDiffResult ={
     days: number,
 };
 

@@ -1,13 +1,13 @@
 import {
-    dateDiff,
-    dateTimeDiff,
-    dayDiff,
-    dayTimeDiff,
     DateDiffResult,
     DateTimeDiffResult,
     DayTimeDiffResult,
     addDateTimeDiff,
     addDayTimeDiff,
+    dateDiff,
+    dateTimeDiff,
+    dayDiff,
+    dayTimeDiff,
 } from "../src/lib.js";
 
 const randomDate = (): Date => {
