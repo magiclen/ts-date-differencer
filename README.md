@@ -98,7 +98,7 @@ Explanation:
 
 ### Time Zones
 
-`dateDiff`, `dateTimeDiff`, and `addDateTimeDiff` work with the wall-clock date and time in the local time zone. For example, during a DST overlap, `01:10` after the clock goes back is treated as 20 minutes earlier than `01:30` before it, even though it is 40 minutes later in real time.
+`dateDiff`, `dateTimeDiff`, and `addDateTimeDiff` work with the wall-clock date and time in the local time zone. For example, during a DST overlap, `01:10` after the clock goes back is treated as 20 minutes earlier than `01:30` before it, even though it is 40 minutes later in real time. If the result of `addDateTimeDiff` does not exist in the local time zone (in a DST gap), it is moved forward, and if it exists twice (in a DST overlap), the earlier one is used, like `new Date(year, month, ...)` does.
 
 Pass `{ utc: true }` to use UTC instead, so the result does not depend on the local time zone. This is useful on servers, or for dates parsed from strings like `"2020-02-27"`, which are UTC midnight.
 
@@ -112,7 +112,7 @@ console.log(dateDiff(a, b, { utc: true })); // { "years": 1, "months": 0, "days"
 console.log(addDateTimeDiff(a, dateTimeDiff(a, b, { utc: true }), { utc: true })); // the same as b
 ```
 
-`dayDiff`, `dayTimeDiff`, and `addDayTimeDiff` treat a day as 24 hours, so they do not depend on the time zone.
+`dayDiff`, `dayTimeDiff`, and `addDayTimeDiff` treat a day as 24 hours, so they do not depend on the time zone. `addDayTimeDiff` ignores `years` and `months`, so use `addDateTimeDiff` for the result of `dateTimeDiff`.
 
 ### Errors
 

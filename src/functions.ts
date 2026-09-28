@@ -46,7 +46,8 @@ export const toTimestamp = (name: string, value: Date | number): number => {
         );
     }
 
-    return value;
+    // Change `-0` to `0` so that a result does not contain `-0`.
+    return value === 0 ? 0 : value;
 };
 
 /** The same as `toTimestamp`, but returns a `Date`. */

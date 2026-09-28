@@ -86,6 +86,19 @@ describe("DST gap", () => {
     });
 });
 
+describe("years from 0 to 99", () => {
+    it("is not affected by a DST gap of the same date in the 1900s", () => {
+        // 1950-04-30 02:00 to 03:00 is skipped in New York, but 0050-04-30 02:30 exists.
+        const from = new Date(1950, 4 - 1, 29, 2, 30);
+
+        from.setFullYear(50, 4 - 1, 29);
+
+        const result = addDateTimeDiff(from, { days: 1 });
+
+        assert.deepEqual(getWallClockFields(result), [50, 4 - 1, 30, 2, 30, 0, 0]);
+    });
+});
+
 describe("add diff back", () => {
     it("addDateTimeDiff (randomly run tests for 1000 times)", () => {
         for (let i = 0; i < 1000; i++) {

@@ -53,6 +53,9 @@ export const createDate = (fields: DateTimeFields, utc: boolean): Date => {
             result.setUTCFullYear(year, month - 1, day);
         } else {
             result.setFullYear(year, month - 1, day);
+
+            // The time may have been moved by a DST gap of the same date in the 1900s, so set it again.
+            result.setHours(hour, minute, second, millisecond);
         }
     }
 

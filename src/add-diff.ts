@@ -9,7 +9,14 @@ import {
 import type { TimeZoneOptions } from "./date-time-fields.ts";
 import { createDate, getDateTimeFields, isUTC } from "./date-time-fields.ts";
 import type { DateTimeDiffResult, DayTimeDiffResult } from "./diff.ts";
-import { floorDiv, floorMod, getDiffField, toTimestamp, validateResult } from "./functions.ts";
+import {
+    floorDiv,
+    floorMod,
+    getDiffField,
+    toDate,
+    toTimestamp,
+    validateResult,
+} from "./functions.ts";
 
 // The Gregorian calendar repeats every 400 years, which have 146097 days.
 const DAYS_IN_400_YEARS = 146_097;
@@ -39,7 +46,8 @@ const addWithCarry = (
  * month is shorter. Then days, hours, minutes, seconds and milliseconds are added in this order.
  * The fields are added to the wall-clock date and time in the local time zone, or in UTC if
  * `options.utc` is `true`. If the result does not exist in the local time zone (for example, in a
- * DST gap), it is moved forward like `new Date(year, month, ...)` does.
+ * DST gap), it is moved forward like `new Date(year, month, ...)` does. If it exists twice (for
+ * example, in a DST overlap), the earlier one is used.
  *
  * @param from A `Date` or a timestamp in milliseconds.
  * @param dateTimeDiff A missing field is treated as `0`. The fields must be safe integers.
@@ -54,7 +62,7 @@ export const addDateTimeDiff = (
     options?: TimeZoneOptions,
 ): Date => {
     const utc = isUTC(options);
-    const fields = getDateTimeFields(new Date(toTimestamp("from", from)), utc);
+    const fields = getDateTimeFields(toDate("from", from), utc);
 
     const years = getDiffField("years", dateTimeDiff.years, true);
     const months = getDiffField("months", dateTimeDiff.months, true);
@@ -165,11 +173,13 @@ export const addDateTimeDiff = (
 /**
  * Calculate `from` + `dayTimeDiff`.
  *
- * A day is always 24 hours, so the result does not depend on the time zone.
+ * A day is always 24 hours, so the result does not depend on the time zone. The result is rounded
+ * to the nearest millisecond.
  *
  * @param from A `Date` or a timestamp in milliseconds.
  * @param dayTimeDiff An object whose missing field is treated as `0`, or a number of days. The
- *   values must be finite numbers.
+ *   values must be finite numbers. The `years` and `months` fields of a `DateTimeDiffResult` are
+ *   ignored, so use `addDateTimeDiff` for it.
  * @throws {TypeError} If `from` is neither a `Date` nor a number, or `dayTimeDiff` (or its field)
  *   is not a number.
  * @throws {RangeError} If `from` is an invalid date or timestamp, `dayTimeDiff` (or its field) is
@@ -181,22 +191,27 @@ export const addDayTimeDiff = (
 ): Date => {
     const timestamp = toTimestamp("from", from);
 
+    // Round the result because `Date` truncates the fraction, so a floating-point error like `b - 0.0001` from `dayDiff` would lose 1 millisecond.
     if (typeof dayTimeDiff === "number") {
         return validateResult(
             new Date(
-                timestamp + getDiffField("dayTimeDiff", dayTimeDiff, false) * DAY_MILLISECONDS,
+                Math.round(
+                    timestamp + getDiffField("dayTimeDiff", dayTimeDiff, false) * DAY_MILLISECONDS,
+                ),
             ),
         );
     }
 
     return validateResult(
         new Date(
-            timestamp +
-                getDiffField("days", dayTimeDiff.days, false) * DAY_MILLISECONDS +
-                getDiffField("hours", dayTimeDiff.hours, false) * HOUR_MILLISECONDS +
-                getDiffField("minutes", dayTimeDiff.minutes, false) * MINUTE_MILLISECONDS +
-                getDiffField("seconds", dayTimeDiff.seconds, false) * SECOND_MILLISECONDS +
-                getDiffField("milliseconds", dayTimeDiff.milliseconds, false),
+            Math.round(
+                timestamp +
+                    getDiffField("days", dayTimeDiff.days, false) * DAY_MILLISECONDS +
+                    getDiffField("hours", dayTimeDiff.hours, false) * HOUR_MILLISECONDS +
+                    getDiffField("minutes", dayTimeDiff.minutes, false) * MINUTE_MILLISECONDS +
+                    getDiffField("seconds", dayTimeDiff.seconds, false) * SECOND_MILLISECONDS +
+                    getDiffField("milliseconds", dayTimeDiff.milliseconds, false),
+            ),
         ),
     );
 };

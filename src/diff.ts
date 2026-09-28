@@ -210,7 +210,7 @@ const calculateDateDiff = (
 
             months = monthDiff + 12;
         } else {
-            // e.g. 2009-11-02 to 2010-03-04
+            // e.g. 2009-11-04 to 2010-03-02
 
             months = monthDiff + 11;
         }
@@ -239,7 +239,7 @@ const calculateDateDiff = (
             days = laterDate - earlierDate;
         }
     } else {
-        // e.g. 2010-01-02 to 2010-03-01, 2009-11-02 to 2010-03-04, 2009-12-04 to 2010-12-02
+        // e.g. 2010-01-02 to 2010-03-01, 2009-11-04 to 2010-03-02, 2009-12-04 to 2010-12-02
 
         if (startFromLater) {
             if (earlierMonth < 12) {

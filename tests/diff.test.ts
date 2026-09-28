@@ -900,6 +900,17 @@ describe("add diff back", () => {
             assert.deepEqual(addDayTimeDiff(a, diff), b);
         }
     });
+
+    it("addDayTimeDiff with dayDiff (randomly run tests for 1000 times)", () => {
+        for (let i = 0; i < 1000; i++) {
+            const a = randomDate();
+            const b = randomDate();
+
+            const diff = dayDiff(a, b);
+
+            assert.deepEqual(addDayTimeDiff(a, diff), b);
+        }
+    });
 });
 
 describe("add large diff", () => {
