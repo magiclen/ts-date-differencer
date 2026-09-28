@@ -15,7 +15,7 @@
     </head>
 
     <body class="p-3 p-lg-5">
-        <div id="demo-pagination-bar-generator" class="container">
+        <div id="demo-date-differencer" class="container">
             <div class="row g-3">
                 <div class="col-12">
                     <div class="row g-2">
@@ -23,7 +23,7 @@
                             <input type="datetime-local" id="a" class="form-control" step="1" />
                         </div>
                         <div class="col-auto">
-                            <input type="datetime-local" id="b" class="form-control" />
+                            <input type="datetime-local" id="b" class="form-control" step="1" />
                         </div>
                     </div>
                 </div>
@@ -40,24 +40,28 @@
 
             const diff = () => {
                 try {
-                    const r = DateDifferencer.dateTimeDiff(
-                        new Date(a.valueAsNumber),
-                        new Date(b.valueAsNumber),
-                    );
+                    // A date-time string without a time zone is parsed in the local time zone.
+                    const r = DateDifferencer.dateTimeDiff(new Date(a.value), new Date(b.value));
 
-                    result.innerHTML = JSON.stringify(r, null, 4);
+                    result.textContent = JSON.stringify(r, null, 4);
                 } catch (error) {
-                    result.innerHTML = error.message;
+                    result.textContent = error.message;
                 }
             };
 
             a.addEventListener("input", diff);
             b.addEventListener("input", diff);
 
-            const now = Date.now();
+            const pad = (n) => String(n).padStart(2, "0");
 
-            a.valueAsNumber = now;
-            b.valueAsNumber = now;
+            // `valueAsNumber` of a `datetime-local` input treats the local time as UTC, so use a local date-time string instead.
+            const toLocalString = (date) =>
+                `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+
+            const now = toLocalString(new Date());
+
+            a.value = now;
+            b.value = now;
 
             diff();
         </script>
