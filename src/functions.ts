@@ -11,6 +11,10 @@ export const floorDiv = (dividend: number, divisor: number): number =>
 export const floorMod = (dividend: number, divisor: number): number =>
     dividend - divisor * floorDiv(dividend, divisor);
 
+// `instanceof Date` is `false` for a `Date` from another realm, such as an iframe.
+const isDate = (value: unknown): value is Date =>
+    Object.prototype.toString.call(value) === "[object Date]";
+
 /**
  * Convert a `Date` or a timestamp to a timestamp.
  *
@@ -19,7 +23,7 @@ export const floorMod = (dividend: number, divisor: number): number =>
  *   of the range of `Date`.
  */
 export const toTimestamp = (name: string, value: Date | number): number => {
-    if (value instanceof Date) {
+    if (isDate(value)) {
         const timestamp = value.getTime();
 
         if (Number.isNaN(timestamp)) {
