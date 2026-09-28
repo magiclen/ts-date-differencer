@@ -6,7 +6,9 @@ import {
     MINUTE_MILLISECONDS,
     SECOND_MILLISECONDS,
 } from "./constants.ts";
-import { datesToTimestampsWithValidation, negate, validateDates } from "./functions.ts";
+import type { TimeZoneOptions } from "./date-time-fields.ts";
+import { getDateTimeFields, isUTC } from "./date-time-fields.ts";
+import { negate, toDate, toTimestamp } from "./functions.ts";
 
 /** The time part of a difference. */
 export interface TimeDiffResult {
@@ -43,16 +45,20 @@ interface WallClock {
     millisecondsOfDay: number;
 }
 
-const getWallClock = (date: Date): WallClock => ({
-    year: date.getFullYear(),
-    month: date.getMonth() + 1,
-    day: date.getDate(),
-    millisecondsOfDay:
-        date.getHours() * HOUR_MILLISECONDS +
-        date.getMinutes() * MINUTE_MILLISECONDS +
-        date.getSeconds() * SECOND_MILLISECONDS +
-        date.getMilliseconds(),
-});
+const getWallClock = (date: Date, utc: boolean): WallClock => {
+    const { year, month, day, hour, minute, second, millisecond } = getDateTimeFields(date, utc);
+
+    return {
+        year,
+        month,
+        day,
+        millisecondsOfDay:
+            hour * HOUR_MILLISECONDS +
+            minute * MINUTE_MILLISECONDS +
+            second * SECOND_MILLISECONDS +
+            millisecond,
+    };
+};
 
 // Compare the fields in the order of year, month, day and time of day, like the derived `Ord` of `WallClock` in the Rust version.
 const compareWallClock = (a: WallClock, b: WallClock): number => {
@@ -283,19 +289,26 @@ const calculateDayTimeDiff = (milliseconds: number): DayTimeDiffResult => ({
 });
 
 /**
- * Calculate the difference between two `Date` objects in years, months and days.
+ * Calculate the difference between two date-time values in years, months and days.
  *
  * The result is positive when `to` is later than `from`, and negative when `to` is earlier than
- * `from`. The result is calculated with the wall-clock date and time in the local time zone. Only
- * complete days are counted, so a remaining time shorter than a day is dropped.
+ * `from`. The result is calculated with the wall-clock date and time in the local time zone, or in
+ * UTC if `options.utc` is `true`. Only complete days are counted, so a remaining time shorter than
+ * a day is dropped.
  *
- * @throws {RangeError} Invalid date
+ * @param from A `Date` or a timestamp in milliseconds.
+ * @param to A `Date` or a timestamp in milliseconds.
+ * @throws {TypeError} If `from` or `to` is neither a `Date` nor a number.
+ * @throws {RangeError} If `from` or `to` is an invalid date or timestamp.
  */
-export const dateDiff = (from: Date, to: Date): DateDiffResult => {
-    validateDates(from, to);
-
-    const fromWallClock = getWallClock(from);
-    const toWallClock = getWallClock(to);
+export const dateDiff = (
+    from: Date | number,
+    to: Date | number,
+    options?: TimeZoneOptions,
+): DateDiffResult => {
+    const utc = isUTC(options);
+    const fromWallClock = getWallClock(toDate("from", from), utc);
+    const toWallClock = getWallClock(toDate("to", to), utc);
     const ordering = compareWallClock(toWallClock, fromWallClock);
 
     if (ordering > 0) {
@@ -312,19 +325,26 @@ export const dateDiff = (from: Date, to: Date): DateDiffResult => {
 };
 
 /**
- * Calculate the difference between two `Date` objects in years, months, days, hours, minutes,
+ * Calculate the difference between two date-time values in years, months, days, hours, minutes,
  * seconds and milliseconds.
  *
  * The result is positive when `to` is later than `from`, and negative when `to` is earlier than
- * `from`. The result is calculated with the wall-clock date and time in the local time zone.
+ * `from`. The result is calculated with the wall-clock date and time in the local time zone, or in
+ * UTC if `options.utc` is `true`.
  *
- * @throws {RangeError} Invalid date
+ * @param from A `Date` or a timestamp in milliseconds.
+ * @param to A `Date` or a timestamp in milliseconds.
+ * @throws {TypeError} If `from` or `to` is neither a `Date` nor a number.
+ * @throws {RangeError} If `from` or `to` is an invalid date or timestamp.
  */
-export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
-    validateDates(from, to);
-
-    const fromWallClock = getWallClock(from);
-    const toWallClock = getWallClock(to);
+export const dateTimeDiff = (
+    from: Date | number,
+    to: Date | number,
+    options?: TimeZoneOptions,
+): DateTimeDiffResult => {
+    const utc = isUTC(options);
+    const fromWallClock = getWallClock(toDate("from", from), utc);
+    const toWallClock = getWallClock(toDate("to", to), utc);
     const ordering = compareWallClock(toWallClock, fromWallClock);
 
     if (ordering > 0) {
@@ -350,32 +370,36 @@ export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
 };
 
 /**
- * Calculate the difference between two `Date` objects or timestamps in days.
+ * Calculate the difference between two date-time values in days.
  *
  * A day is always 24 hours, so the result does not depend on the time zone.
  *
- * @param a A `Date` or a timestamp in milliseconds
- * @param b A `Date` or a timestamp in milliseconds
- * @returns The difference in days with the decimal part
- * @throws {RangeError} Invalid date (or timestamp)
+ * @param from A `Date` or a timestamp in milliseconds.
+ * @param to A `Date` or a timestamp in milliseconds.
+ * @returns The difference in days with the decimal part.
+ * @throws {TypeError} If `from` or `to` is neither a `Date` nor a number.
+ * @throws {RangeError} If `from` or `to` is an invalid date or timestamp.
  */
-export const dayDiff = (a: Date | number, b: Date | number): number => {
-    const t = datesToTimestampsWithValidation(a, b);
+export const dayDiff = (from: Date | number, to: Date | number): number => {
+    const fromTimestamp = toTimestamp("from", from);
 
-    return (t.b - t.a) / DAY_MILLISECONDS;
+    return (toTimestamp("to", to) - fromTimestamp) / DAY_MILLISECONDS;
 };
 
 /**
- * Calculate the difference between two `Date` objects or timestamps in days, hours, minutes,
- * seconds and milliseconds.
+ * Calculate the difference between two date-time values in days, hours, minutes, seconds and
+ * milliseconds.
  *
  * A day is always 24 hours, so the result does not depend on the time zone.
  *
- * @throws {RangeError} Invalid date (or timestamp)
+ * @param from A `Date` or a timestamp in milliseconds.
+ * @param to A `Date` or a timestamp in milliseconds.
+ * @throws {TypeError} If `from` or `to` is neither a `Date` nor a number.
+ * @throws {RangeError} If `from` or `to` is an invalid date or timestamp.
  */
-export const dayTimeDiff = (a: Date | number, b: Date | number): DayTimeDiffResult => {
-    const t = datesToTimestampsWithValidation(a, b);
-    const milliseconds = t.b - t.a;
+export const dayTimeDiff = (from: Date | number, to: Date | number): DayTimeDiffResult => {
+    const fromTimestamp = toTimestamp("from", from);
+    const milliseconds = toTimestamp("to", to) - fromTimestamp;
 
     if (milliseconds >= 0) {
         return calculateDayTimeDiff(milliseconds);

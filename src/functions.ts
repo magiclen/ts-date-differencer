@@ -1,3 +1,6 @@
+// The maximum absolute value of a timestamp that `Date` can represent.
+const MAX_TIMESTAMP = 8.64e15;
+
 // `0 - value` gives `0` instead of `-0` when `value` is `0`.
 export const negate = (value: number): number => 0 - value;
 
@@ -8,39 +11,79 @@ export const floorDiv = (dividend: number, divisor: number): number =>
 export const floorMod = (dividend: number, divisor: number): number =>
     dividend - divisor * floorDiv(dividend, divisor);
 
-const validateDate = (a: Date): void => {
-    if (isNaN(a.getTime())) {
-        throw new RangeError("invalid date");
-    }
-};
+/**
+ * Convert a `Date` or a timestamp to a timestamp.
+ *
+ * @throws {TypeError} If `value` is neither a `Date` nor a number.
+ * @throws {RangeError} If `value` is an invalid date, or a timestamp which is not an integer or out
+ *   of the range of `Date`.
+ */
+export const toTimestamp = (name: string, value: Date | number): number => {
+    if (value instanceof Date) {
+        const timestamp = value.getTime();
 
-export const validateDates = (a: Date, b: Date): void => {
-    validateDate(a);
-    validateDate(b);
-};
+        if (Number.isNaN(timestamp)) {
+            throw new RangeError(`\`${name}\` is an invalid date.`);
+        }
 
-const validateTimestamp = (t: number): void => {
-    if (!Number.isInteger(t)) {
-        throw new RangeError("invalid date");
-    }
-};
-
-const dateToTimestampWithValidation = (a: Date | number): number => {
-    if (typeof a !== "number") {
-        validateDate(a);
-
-        a = a.getTime();
-    } else {
-        validateTimestamp(a);
+        return timestamp;
     }
 
-    return a;
+    // JavaScript callers can pass any type.
+    if (typeof value !== "number") {
+        throw new TypeError(
+            `\`${name}\` must be a Date or a number, but its type is ${typeof value}.`,
+        );
+    }
+
+    if (!(Number.isInteger(value) && Math.abs(value) <= MAX_TIMESTAMP)) {
+        throw new RangeError(
+            `\`${name}\` must be an integer from ${-MAX_TIMESTAMP} to ${MAX_TIMESTAMP}, but it is ${value}.`,
+        );
+    }
+
+    return value;
 };
 
-export const datesToTimestampsWithValidation = (
-    a: Date | number,
-    b: Date | number,
-): { a: number; b: number } => ({
-    a: dateToTimestampWithValidation(a),
-    b: dateToTimestampWithValidation(b),
-});
+/** The same as `toTimestamp`, but returns a `Date`. */
+export const toDate = (name: string, value: Date | number): Date =>
+    new Date(toTimestamp(name, value));
+
+/**
+ * Get a field of a difference object. A missing field is `0`.
+ *
+ * @throws {TypeError} If the field is neither `undefined` nor a number.
+ * @throws {RangeError} If the field is not a safe integer (or not a finite number when `integer` is
+ *   `false`).
+ */
+export const getDiffField = (name: string, value: number | undefined, integer: boolean): number => {
+    if (typeof value === "undefined") {
+        return 0;
+    }
+
+    // JavaScript callers can pass any type.
+    if (typeof value !== "number") {
+        throw new TypeError(`\`${name}\` must be a number, but its type is ${typeof value}.`);
+    }
+
+    if (integer ? !Number.isSafeInteger(value) : !Number.isFinite(value)) {
+        throw new RangeError(
+            `\`${name}\` must be ${integer ? "a safe integer" : "a finite number"}, but it is ${value}.`,
+        );
+    }
+
+    return value;
+};
+
+/**
+ * Make sure a calculated `Date` is valid.
+ *
+ * @throws {RangeError} If `date` is out of the range of `Date`.
+ */
+export const validateResult = (date: Date): Date => {
+    if (Number.isNaN(date.getTime())) {
+        throw new RangeError("The result is out of the range of `Date`.");
+    }
+
+    return date;
+};
