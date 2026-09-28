@@ -1,8 +1,7 @@
-import type {
-    DateDiffResult,
-    DateTimeDiffResult,
-    DayTimeDiffResult,
-} from "../src/lib.js";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import type { DateDiffResult, DateTimeDiffResult, DayTimeDiffResult } from "../src/index.ts";
 import {
     addDateTimeDiff,
     addDayTimeDiff,
@@ -10,7 +9,7 @@ import {
     dateTimeDiff,
     dayDiff,
     dayTimeDiff,
-} from "../src/lib.js";
+} from "../src/index.ts";
 
 const randomDate = (): Date => new Date(Math.trunc(Math.random() * 3000000000000) - 1000000000000);
 
@@ -21,9 +20,7 @@ const zeroDate = (overwrite?: Partial<DateDiffResult>): DateDiffResult => ({
     ...overwrite,
 });
 
-const zeroDateTime = (
-    overwrite?: Partial<DateTimeDiffResult>,
-): DateTimeDiffResult => ({
+const zeroDateTime = (overwrite?: Partial<DateTimeDiffResult>): DateTimeDiffResult => ({
     years: 0,
     months: 0,
     days: 0,
@@ -34,9 +31,7 @@ const zeroDateTime = (
     ...overwrite,
 });
 
-const zeroDayTime = (
-    overwrite?: Partial<DayTimeDiffResult>,
-): DayTimeDiffResult => ({
+const zeroDayTime = (overwrite?: Partial<DayTimeDiffResult>): DayTimeDiffResult => ({
     days: 0,
     hours: 0,
     minutes: 0,
@@ -45,31 +40,26 @@ const zeroDayTime = (
     ...overwrite,
 });
 
-// has side effect
-const neg = (
-    t: Record<string, number> | number,
-): Record<string, number> | number => {
-    if (typeof t === "object") {
-        for (const [key, value] of Object.entries(t)) {
-            if (value !== 0) {
-                t[key] *= -1;
-            }
-        }
-
-        return t;
-    } else {
-        return -t;
-    }
-};
+// `0 - value` gives `0` instead of `-0` when `value` is `0`.
+const neg = <T extends Partial<DateTimeDiffResult>>(t: T): T => ({
+    ...t,
+    ...(t.years === undefined ? {} : { years: 0 - t.years }),
+    ...(t.months === undefined ? {} : { months: 0 - t.months }),
+    ...(t.days === undefined ? {} : { days: 0 - t.days }),
+    ...(t.hours === undefined ? {} : { hours: 0 - t.hours }),
+    ...(t.minutes === undefined ? {} : { minutes: 0 - t.minutes }),
+    ...(t.seconds === undefined ? {} : { seconds: 0 - t.seconds }),
+    ...(t.milliseconds === undefined ? {} : { milliseconds: 0 - t.milliseconds }),
+});
 
 describe("basic", () => {
     it("same date", () => {
         const date = new Date();
 
-        expect(dateDiff(date, date)).toEqual(zeroDate());
-        expect(dateTimeDiff(date, date)).toEqual(zeroDateTime());
-        expect(dayDiff(date, date)).toBe(0);
-        expect(dayTimeDiff(date, date)).toEqual(zeroDayTime());
+        assert.deepEqual(dateDiff(date, date), zeroDate());
+        assert.deepEqual(dateTimeDiff(date, date), zeroDateTime());
+        assert.equal(dayDiff(date, date), 0);
+        assert.deepEqual(dayTimeDiff(date, date), zeroDayTime());
     });
 
     it("diff 1 millisecond", () => {
@@ -83,17 +73,15 @@ describe("basic", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 second", () => {
@@ -107,17 +95,15 @@ describe("basic", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 minute", () => {
@@ -131,17 +117,15 @@ describe("basic", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 hour", () => {
@@ -155,17 +139,15 @@ describe("basic", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 day", () => {
@@ -179,24 +161,20 @@ describe("basic", () => {
         const expectDayResult = 1;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(dayDiff(date, datePlus)).toBe(expectDayResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(dayDiff(date, datePlus), expectDayResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(dayDiff(datePlus, date), -expectDayResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 month", () => {
         const date = new Date(2001, 1 - 1, 1);
-        const datePlus = new Date(
-            date.getFullYear(),
-            date.getMonth() + 1,
-            date.getDate(),
-        );
+        const datePlus = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
         const overwrite = { months: 1 };
 
@@ -205,24 +183,20 @@ describe("basic", () => {
         const expectDayResult = 31;
         const expectDayTimeResult = zeroDayTime({ days: expectDayResult });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(dayDiff(date, datePlus)).toBe(expectDayResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(dayDiff(date, datePlus), expectDayResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(dayDiff(datePlus, date), -expectDayResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 year", () => {
         const date = new Date(2001, 1 - 1, 1);
-        const datePlus = new Date(
-            date.getFullYear() + 1,
-            date.getMonth(),
-            date.getDate(),
-        );
+        const datePlus = new Date(date.getFullYear() + 1, date.getMonth(), date.getDate());
 
         const overwrite = { years: 1 };
 
@@ -231,15 +205,15 @@ describe("basic", () => {
         const expectDayResult = 365;
         const expectDayTimeResult = zeroDayTime({ days: expectDayResult });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(dayDiff(date, datePlus)).toBe(expectDayResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(dayDiff(date, datePlus), expectDayResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(dayDiff(datePlus, date), -expectDayResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 year +1 month +1 day +1 hour +1 minute +1 second +1 millisecond", () => {
@@ -273,17 +247,15 @@ describe("basic", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 });
 
@@ -299,17 +271,15 @@ describe("basic 2", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 second", () => {
@@ -323,17 +293,15 @@ describe("basic 2", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 minute", () => {
@@ -347,17 +315,15 @@ describe("basic 2", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 hour", () => {
@@ -371,17 +337,15 @@ describe("basic 2", () => {
         const expectDayTruncResult = 0;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 day", () => {
@@ -395,15 +359,15 @@ describe("basic 2", () => {
         const expectDayResult = 1;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(dayDiff(date, datePlus)).toBe(expectDayResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(dayDiff(date, datePlus), expectDayResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(dayDiff(datePlus, date), -expectDayResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 2 day (leap)", () => {
@@ -417,15 +381,15 @@ describe("basic 2", () => {
         const expectDayResult = 2;
         const expectDayTimeResult = zeroDayTime(overwrite);
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(dayDiff(date, datePlus)).toBe(expectDayResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(dayDiff(date, datePlus), expectDayResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(dayDiff(datePlus, date), -expectDayResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("diff 1 month", () => {
@@ -439,15 +403,15 @@ describe("basic 2", () => {
         const expectDayResult = 31;
         const expectDayTimeResult = zeroDayTime({ days: expectDayResult });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(dayDiff(date, datePlus)).toBe(expectDayResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(dayDiff(date, datePlus), expectDayResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(dayDiff(datePlus, date)).toBe(neg(expectDayResult));
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(dayDiff(datePlus, date), -expectDayResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 });
 
@@ -475,17 +439,15 @@ describe("complex", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("b > a, but b.time < a.time", () => {
@@ -511,17 +473,15 @@ describe("complex", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("b > a, but b.date < a.date", () => {
@@ -547,17 +507,15 @@ describe("complex", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("b > a, but b.date < a.date & b.month === a.month", () => {
@@ -583,17 +541,15 @@ describe("complex", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("b > a, but b.month < a.month", () => {
@@ -619,17 +575,15 @@ describe("complex", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 
     it("b > a, but b.month < a.month & b.date < a.date", () => {
@@ -655,28 +609,22 @@ describe("complex", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(date, datePlus)).toEqual(expectDateResult);
-        expect(dateTimeDiff(date, datePlus)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(date, datePlus))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(date, datePlus)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(date, datePlus), expectDateResult);
+        assert.deepEqual(dateTimeDiff(date, datePlus), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(date, datePlus)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(date, datePlus), expectDayTimeResult);
 
-        expect(dateDiff(datePlus, date)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(datePlus, date)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(datePlus, date))).toBe(
-            neg(expectDayTruncResult),
-        );
-        expect(dayTimeDiff(datePlus, date)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(datePlus, date), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(datePlus, date), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(datePlus, date)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(datePlus, date), neg(expectDayTimeResult));
     });
 });
 
 describe("invalid date", () => {
     it("should success", () => {
         const date = new Date(1000000, 1 - 1, 1);
-        const datePlus = new Date(
-            date.getFullYear(),
-            date.getMonth() + 1,
-            date.getDate(),
-        );
+        const datePlus = new Date(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
         const t1 = (): DateDiffResult => dateDiff(date, datePlus);
 
@@ -686,14 +634,14 @@ describe("invalid date", () => {
 
         const t4 = (): DayTimeDiffResult => dayTimeDiff(date, datePlus);
 
-        expect(t1).toThrow(RangeError);
-        expect(t2).toThrow(RangeError);
-        expect(t3).toThrow(RangeError);
-        expect(t4).toThrow(RangeError);
+        assert.throws(t1, RangeError);
+        assert.throws(t2, RangeError);
+        assert.throws(t3, RangeError);
+        assert.throws(t4, RangeError);
     });
 });
 
-describe("spesical cases", () => {
+describe("special cases", () => {
     it("should success", () => {
         const a = new Date(2020, 2 - 1, 27, 2);
         const b = new Date(2021, 3 - 1, 2, 1);
@@ -718,10 +666,10 @@ describe("spesical cases", () => {
                 ...overwrite2,
             });
 
-            expect(dateDiff(a, b)).toEqual(expectDateResult);
-            expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
-            expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
-            expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+            assert.deepEqual(dateDiff(a, b), expectDateResult);
+            assert.deepEqual(dateTimeDiff(a, b), expectDateTimeResult);
+            assert.equal(Math.trunc(dayDiff(a, b)), expectDayTruncResult);
+            assert.deepEqual(dayTimeDiff(a, b), expectDayTimeResult);
         }
 
         // dateDiff(a, b) and dateDiff(b, a) have different absolute days! Because of the opposite moving direction.
@@ -746,10 +694,10 @@ describe("spesical cases", () => {
                 ...overwrite2,
             });
 
-            expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
-            expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
-            expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
-            expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+            assert.deepEqual(dateDiff(b, a), neg(expectDateResult));
+            assert.deepEqual(dateTimeDiff(b, a), neg(expectDateTimeResult));
+            assert.equal(Math.trunc(dayDiff(b, a)), -expectDayTruncResult);
+            assert.deepEqual(dayTimeDiff(b, a), neg(expectDayTimeResult));
         }
     });
 
@@ -777,10 +725,10 @@ describe("spesical cases", () => {
                 ...overwrite2,
             });
 
-            expect(dateDiff(a, b)).toEqual(expectDateResult);
-            expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
-            expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
-            expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+            assert.deepEqual(dateDiff(a, b), expectDateResult);
+            assert.deepEqual(dateTimeDiff(a, b), expectDateTimeResult);
+            assert.equal(Math.trunc(dayDiff(a, b)), expectDayTruncResult);
+            assert.deepEqual(dayTimeDiff(a, b), expectDayTimeResult);
         }
 
         // dateDiff(a, b) and dateDiff(b, a) have different absolute days! Because of the opposite moving direction.
@@ -805,10 +753,10 @@ describe("spesical cases", () => {
                 ...overwrite2,
             });
 
-            expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
-            expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
-            expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
-            expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+            assert.deepEqual(dateDiff(b, a), neg(expectDateResult));
+            assert.deepEqual(dateTimeDiff(b, a), neg(expectDateTimeResult));
+            assert.equal(Math.trunc(dayDiff(b, a)), -expectDayTruncResult);
+            assert.deepEqual(dayTimeDiff(b, a), neg(expectDayTimeResult));
         }
     });
 
@@ -836,10 +784,10 @@ describe("spesical cases", () => {
                 ...overwrite2,
             });
 
-            expect(dateDiff(a, b)).toEqual(expectDateResult);
-            expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
-            expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
-            expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+            assert.deepEqual(dateDiff(a, b), expectDateResult);
+            assert.deepEqual(dateTimeDiff(a, b), expectDateTimeResult);
+            assert.equal(Math.trunc(dayDiff(a, b)), expectDayTruncResult);
+            assert.deepEqual(dayTimeDiff(a, b), expectDayTimeResult);
         }
 
         // dateDiff(a, b) and dateDiff(b, a) have different absolute days! Because of the opposite moving direction.
@@ -864,10 +812,10 @@ describe("spesical cases", () => {
                 ...overwrite2,
             });
 
-            expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
-            expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
-            expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
-            expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+            assert.deepEqual(dateDiff(b, a), neg(expectDateResult));
+            assert.deepEqual(dateTimeDiff(b, a), neg(expectDateTimeResult));
+            assert.equal(Math.trunc(dayDiff(b, a)), -expectDayTruncResult);
+            assert.deepEqual(dayTimeDiff(b, a), neg(expectDayTimeResult));
         }
     });
 
@@ -894,76 +842,98 @@ describe("spesical cases", () => {
             ...overwrite2,
         });
 
-        expect(dateDiff(a, b)).toEqual(expectDateResult);
-        expect(dateTimeDiff(a, b)).toEqual(expectDateTimeResult);
-        expect(Math.trunc(dayDiff(a, b))).toBe(expectDayTruncResult);
-        expect(dayTimeDiff(a, b)).toEqual(expectDayTimeResult);
+        assert.deepEqual(dateDiff(a, b), expectDateResult);
+        assert.deepEqual(dateTimeDiff(a, b), expectDateTimeResult);
+        assert.equal(Math.trunc(dayDiff(a, b)), expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(a, b), expectDayTimeResult);
 
-        expect(dateDiff(b, a)).toEqual(neg(expectDateResult));
-        expect(dateTimeDiff(b, a)).toEqual(neg(expectDateTimeResult));
-        expect(Math.trunc(dayDiff(b, a))).toBe(neg(expectDayTruncResult));
-        expect(dayTimeDiff(b, a)).toEqual(neg(expectDayTimeResult));
+        assert.deepEqual(dateDiff(b, a), neg(expectDateResult));
+        assert.deepEqual(dateTimeDiff(b, a), neg(expectDateTimeResult));
+        assert.equal(Math.trunc(dayDiff(b, a)), -expectDayTruncResult);
+        assert.deepEqual(dayTimeDiff(b, a), neg(expectDayTimeResult));
     });
 });
 
 describe("add diff back", () => {
     it("addDateTimeDiff (randomly run tests for 1000 times)", () => {
-        for (let i = 0;i < 1000;i++) {
+        for (let i = 0; i < 1000; i++) {
             const a = randomDate();
             const b = randomDate();
 
             const diff = dateTimeDiff(a, b);
 
-            expect(addDateTimeDiff(a, diff)).toEqual(b);
+            assert.deepEqual(addDateTimeDiff(a, diff), b);
         }
     });
 
     it("addDayTimeDiff (randomly run tests for 1000 times)", () => {
-        for (let i = 0;i < 1000;i++) {
+        for (let i = 0; i < 1000; i++) {
             const a = randomDate();
             const b = randomDate();
 
             const diff = dayTimeDiff(a, b);
 
-            expect(addDayTimeDiff(a, diff)).toEqual(b);
+            assert.deepEqual(addDayTimeDiff(a, diff), b);
         }
     });
 });
 
 describe("add large diff", () => {
     it("addDateTimeDiff", () => {
-        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { months: 25 }))
-            .toEqual(new Date(2002, 2 - 1, 5));
-        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 })).toEqual(
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2000, 1 - 1, 5), { months: 25 }),
+            new Date(2002, 2 - 1, 5),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 }),
             new Date(2000, 2 - 1, 1),
         );
-        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 + 29 }))
-            .toEqual(new Date(2000, 3 - 1, 1));
-        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { hours: 25 }))
-            .toEqual(new Date(2000, 1 - 1, 6, 1));
-        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { minutes: 61 }))
-            .toEqual(new Date(2000, 1 - 1, 5, 1, 1));
-        expect(addDateTimeDiff(new Date(2000, 1 - 1, 5), { seconds: 61 }))
-            .toEqual(new Date(2000, 1 - 1, 5, 0, 1, 1));
-        expect(
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 + 29 }),
+            new Date(2000, 3 - 1, 1),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2000, 1 - 1, 5), { hours: 25 }),
+            new Date(2000, 1 - 1, 6, 1),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2000, 1 - 1, 5), { minutes: 61 }),
+            new Date(2000, 1 - 1, 5, 1, 1),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2000, 1 - 1, 5), { seconds: 61 }),
+            new Date(2000, 1 - 1, 5, 0, 1, 1),
+        );
+        assert.deepEqual(
             addDateTimeDiff(new Date(2000, 1 - 1, 5), { milliseconds: 1001 }),
-        ).toEqual(new Date(2000, 1 - 1, 5, 0, 0, 1, 1));
+            new Date(2000, 1 - 1, 5, 0, 0, 1, 1),
+        );
     });
 
     it("addDayTimeDiff", () => {
-        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 })).toEqual(
+        assert.deepEqual(
+            addDayTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 }),
             new Date(2000, 2 - 1, 1),
         );
-        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 + 29 }))
-            .toEqual(new Date(2000, 3 - 1, 1));
-        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { hours: 25 })).toEqual(
+        assert.deepEqual(
+            addDayTimeDiff(new Date(2000, 1 - 1, 5), { days: 27 + 29 }),
+            new Date(2000, 3 - 1, 1),
+        );
+        assert.deepEqual(
+            addDayTimeDiff(new Date(2000, 1 - 1, 5), { hours: 25 }),
             new Date(2000, 1 - 1, 6, 1),
         );
-        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { minutes: 61 }))
-            .toEqual(new Date(2000, 1 - 1, 5, 1, 1));
-        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { seconds: 61 }))
-            .toEqual(new Date(2000, 1 - 1, 5, 0, 1, 1));
-        expect(addDayTimeDiff(new Date(2000, 1 - 1, 5), { milliseconds: 1001 }))
-            .toEqual(new Date(2000, 1 - 1, 5, 0, 0, 1, 1));
+        assert.deepEqual(
+            addDayTimeDiff(new Date(2000, 1 - 1, 5), { minutes: 61 }),
+            new Date(2000, 1 - 1, 5, 1, 1),
+        );
+        assert.deepEqual(
+            addDayTimeDiff(new Date(2000, 1 - 1, 5), { seconds: 61 }),
+            new Date(2000, 1 - 1, 5, 0, 1, 1),
+        );
+        assert.deepEqual(
+            addDayTimeDiff(new Date(2000, 1 - 1, 5), { milliseconds: 1001 }),
+            new Date(2000, 1 - 1, 5, 0, 0, 1, 1),
+        );
     });
 });

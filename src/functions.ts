@@ -1,10 +1,5 @@
-export const negativize = (obj: Record<string, number>): void => {
-    for (const [key, value] of Object.entries(obj)) {
-        if (value !== 0) {
-            obj[key] *= -1;
-        }
-    }
-};
+// `0 - value` gives `0` instead of `-0` when `value` is `0`.
+export const negate = (value: number): number => 0 - value;
 
 const validateDate = (a: Date): void => {
     if (isNaN(a.getTime())) {

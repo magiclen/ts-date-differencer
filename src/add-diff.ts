@@ -1,16 +1,13 @@
 import { getDaysInMonth } from "year-helper";
 
-import type { DateTimeDiffResult, DayTimeDiffResult } from "./diff.js";
+import type { DateTimeDiffResult, DayTimeDiffResult } from "./diff.ts";
 
 /**
  * Calculate `from` + `dateTimeDiff`.
  *
- * @param dateTimeDiff **unchecked, the values in the object must be integers**
+ * @param dateTimeDiff *unchecked, the values in the object must be integers**
  */
-export const addDateTimeDiff = (
-    from: Date,
-    dateTimeDiff: Partial<DateTimeDiffResult>,
-): Date => {
+export const addDateTimeDiff = (from: Date, dateTimeDiff: Partial<DateTimeDiffResult>): Date => {
     let year = from.getFullYear();
 
     if (typeof dateTimeDiff.years === "number") {
@@ -28,7 +25,6 @@ export const addDateTimeDiff = (
         } else if (month < 0) {
             year += Math.trunc(month / 12) - 1;
 
-             
             month = 12 - (-month % 12);
 
             if (month === 12) {
@@ -57,27 +53,27 @@ export const addDateTimeDiff = (
             date = getDaysInMonth(year, month + 1);
         } else if (date > 28) {
             for (;;) {
-                const daysInMonth = getDaysInMonth(year, month + 1);
+                const currentDaysInMonth = getDaysInMonth(year, month + 1);
 
-                if (date <= daysInMonth) {
+                if (date <= currentDaysInMonth) {
                     break;
                 }
 
                 monthAdd(1);
-                date -= daysInMonth;
+                date -= currentDaysInMonth;
             }
         } else if (date < 0) {
             for (;;) {
                 monthAdd(-1);
 
-                const daysInMonth = getDaysInMonth(year, month + 1);
+                const previousDaysInMonth = getDaysInMonth(year, month + 1);
 
-                if (-date < daysInMonth) {
-                    date += daysInMonth;
+                if (-date < previousDaysInMonth) {
+                    date += previousDaysInMonth;
                     break;
                 }
 
-                date += daysInMonth;
+                date += previousDaysInMonth;
             }
         }
     };
@@ -97,7 +93,6 @@ export const addDateTimeDiff = (
         } else if (hour < 0) {
             dateAdd(Math.trunc(hour / 24) - 1);
 
-             
             hour = 24 - (-hour % 24);
 
             if (hour === 24) {
@@ -121,7 +116,6 @@ export const addDateTimeDiff = (
         } else if (minute < 0) {
             hourAdd(Math.trunc(minute / 60) - 1);
 
-             
             minute = 60 - (-minute % 60);
 
             if (minute === 60) {
@@ -145,7 +139,6 @@ export const addDateTimeDiff = (
         } else if (second < 0) {
             minuteAdd(Math.trunc(second / 60) - 1);
 
-             
             second = 60 - (-second % 60);
 
             if (second === 60) {
@@ -169,7 +162,6 @@ export const addDateTimeDiff = (
         } else if (millisecond < 0) {
             secondAdd(Math.trunc(millisecond / 1000) - 1);
 
-             
             millisecond = 1000 - (-millisecond % 1000);
 
             if (millisecond === 1000) {
@@ -188,14 +180,15 @@ export const addDateTimeDiff = (
 /**
  * Calculate `from` + `dayTimeDiff`.
  *
- * @param dateTimeDiff **unchecked, if it is an object, the values in it should be integers; if it is a number which means days, it must not be `NaN` or `Infinit`**
+ * @param dateTimeDiff _unchecked, if it is an object, the values in it should be integers; if it is
+ *   a number which means days, it must not be `NaN` or `Infinit`_*
  */
 export const addDayTimeDiff = (
     from: Date,
     dayTimeDiff: Partial<DayTimeDiffResult> | number,
 ): Date => {
     if (typeof dayTimeDiff === "number") {
-        return new Date(from.getTime() + (dayTimeDiff * 86400000));
+        return new Date(from.getTime() + dayTimeDiff * 86400000);
     } else {
         let timestamp = from.getTime();
 

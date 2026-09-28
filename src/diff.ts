@@ -1,35 +1,41 @@
 import { getDaysInMonth } from "year-helper";
 
-import {
-    datesToTimestampsWithValidation,
-    negativize,
-    validateDates,
-} from "./functions.js";
+import { datesToTimestampsWithValidation, negate, validateDates } from "./functions.ts";
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type TimeDiffResult = {
+export interface TimeDiffResult {
     hours: number;
     minutes: number;
     seconds: number;
     milliseconds: number;
-};
+}
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type DateDiffResult = {
+export interface DateDiffResult {
     years: number;
     months: number;
     days: number;
-};
+}
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export type DayDiffResult = {
+export interface DayDiffResult {
     days: number;
-};
+}
 
-export type DateTimeDiffResult = DateDiffResult & TimeDiffResult;
-export type DayTimeDiffResult = DayDiffResult & TimeDiffResult;
+export interface DateTimeDiffResult extends DateDiffResult, TimeDiffResult {}
+export interface DayTimeDiffResult extends DayDiffResult, TimeDiffResult {}
 
-const _millisecondsToUnits = (milliseconds: number): TimeDiffResult => {
+const negateDateDiff = (diff: DateDiffResult): DateDiffResult => ({
+    years: negate(diff.years),
+    months: negate(diff.months),
+    days: negate(diff.days),
+});
+
+const negateTimeDiff = (diff: TimeDiffResult): TimeDiffResult => ({
+    hours: negate(diff.hours),
+    minutes: negate(diff.minutes),
+    seconds: negate(diff.seconds),
+    milliseconds: negate(diff.milliseconds),
+});
+
+const millisecondsToUnits = (milliseconds: number): TimeDiffResult => {
     const hours = Math.floor(milliseconds / 3600000);
     milliseconds -= hours * 3600000;
 
@@ -47,7 +53,7 @@ const _millisecondsToUnits = (milliseconds: number): TimeDiffResult => {
     };
 };
 
-const _timeDiff = (
+const calculateTimeDiff = (
     earlierMillisecondsOfDay: number,
     laterMillisecondsOfDay: number,
 ): TimeDiffResult => {
@@ -57,12 +63,15 @@ const _timeDiff = (
         milliseconds += 86400000;
     }
 
-    return _millisecondsToUnits(milliseconds);
+    return millisecondsToUnits(milliseconds);
 };
 
-const _localeTimeMillisecondsOfDay = (date: Date): number => (date.getHours() * 3600000) + (date.getMinutes() * 60000)
-    + (date.getSeconds() * 1000) + date.getMilliseconds();
-const _timeMillisecondsOfDay = (timestamp: number): number => {
+const localMillisecondsOfDay = (date: Date): number =>
+    date.getHours() * 3600000 +
+    date.getMinutes() * 60000 +
+    date.getSeconds() * 1000 +
+    date.getMilliseconds();
+const utcMillisecondsOfDay = (timestamp: number): number => {
     if (timestamp >= 0) {
         return timestamp % 86400000;
     } else {
@@ -76,7 +85,11 @@ const _timeMillisecondsOfDay = (timestamp: number): number => {
     }
 };
 
-const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
+const calculateDateDiff = (
+    earlier: Date,
+    later: Date,
+    startFromLater: boolean,
+): {
     earlierMillisecondsOfDay: number;
     laterMillisecondsOfDay: number;
     result: DateDiffResult;
@@ -89,8 +102,8 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     let laterMonth = later.getMonth() + 1;
     let laterDate = later.getDate();
 
-    const laterMillisecondsOfDay = _localeTimeMillisecondsOfDay(later);
-    const earlierMillisecondsOfDay = _localeTimeMillisecondsOfDay(earlier);
+    const laterMillisecondsOfDay = localMillisecondsOfDay(later);
+    const earlierMillisecondsOfDay = localMillisecondsOfDay(earlier);
 
     let years;
     let months;
@@ -121,7 +134,6 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
         } else {
             // decrease a day from the later date
 
-            // eslint-disable-next-line no-lonely-if
             if (laterDate > 1) {
                 // e.g. 2020-01-12 12:00 to 2022-02-15 11:59
 
@@ -175,7 +187,6 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     } else {
         // monthDiff === 0, e.g. 2009-12 to 2010-12
 
-        // eslint-disable-next-line no-lonely-if
         if (laterDate >= earlierDate) {
             // e.g. 2009-12-02 to 2010-12-04
 
@@ -193,28 +204,21 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
         // e.g. 2010-01-02 to 2010-03-04, 2009-11-02 to 2010-03-04, 2009-12-02 to 2010-12-04
 
         if (startFromLater) {
-            days
-                = Math.min(laterDate, getDaysInMonth(earlierYear, earlierMonth))
-                - earlierDate;
+            days = Math.min(laterDate, getDaysInMonth(earlierYear, earlierMonth)) - earlierDate;
         } else {
             days = laterDate - earlierDate;
         }
     } else {
         // e.g. 2010-01-02 to 2010-03-01, 2009-11-02 to 2010-03-04, 2009-12-04 to 2010-12-02
 
-        // eslint-disable-next-line no-lonely-if
         if (startFromLater) {
             if (earlierMonth < 12) {
-                laterDate = Math.min(
-                    laterDate,
-                    getDaysInMonth(earlierYear, earlierMonth + 1),
-                );
+                laterDate = Math.min(laterDate, getDaysInMonth(earlierYear, earlierMonth + 1));
             } else {
                 // we don't need to handle this because the laterDate cannot be bigger than 31 (January has 31 days)
             }
 
-            days = laterDate
-            + (getDaysInMonth(earlierYear, earlierMonth) - earlierDate);
+            days = laterDate + (getDaysInMonth(earlierYear, earlierMonth) - earlierDate);
         } else {
             let daysInMonth: number;
 
@@ -243,23 +247,22 @@ const _dateDiff = (earlier: Date, later: Date, startFromLater: boolean): {
     };
 };
 
-const _dayDiff = (t: { a: number; b: number }): number => (t.b - t.a) / 86400000;
+const calculateDayDiff = (t: { a: number; b: number }): number => (t.b - t.a) / 86400000;
 
 /**
  * Calculate the difference between two `Date` objects.
  *
- * @returns a key-value object whose keys are date units (in `years`, `months`, etc.) and all values are integers
- * @throws {RangeError} invalid date
+ * @returns A key-value object whose keys are date units (in `years`, `months`, etc.) and all values
+ *   are integers
+ * @throws {RangeError} Invalid date
  */
 export const dateDiff = (from: Date, to: Date): DateDiffResult => {
     if (to > from) {
-        return _dateDiff(from, to, false).result;
+        return calculateDateDiff(from, to, false).result;
     } else if (to < from) {
-        const result = _dateDiff(to, from, true).result;
+        const result = calculateDateDiff(to, from, true).result;
 
-        negativize(result);
-
-        return result;
+        return negateDateDiff(result);
     } else {
         validateDates(from, to);
 
@@ -274,8 +277,9 @@ export const dateDiff = (from: Date, to: Date): DateDiffResult => {
 /**
  * Calculate the difference between two `Date` objects.
  *
- * @returns a key-value object whose keys are date-time units (in `years`, `months`, `hours`, etc.) and all values are integers
- * @throws {RangeError} invalid date
+ * @returns A key-value object whose keys are date-time units (in `years`, `months`, `hours`, etc.)
+ *   and all values are integers
+ * @throws {RangeError} Invalid date
  */
 export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
     if (to > from) {
@@ -283,27 +287,23 @@ export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
             result: diff,
             earlierMillisecondsOfDay,
             laterMillisecondsOfDay,
-        } = _dateDiff(from, to, false);
+        } = calculateDateDiff(from, to, false);
 
         return Object.assign(
             diff,
-            _timeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay),
+            calculateTimeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay),
         );
     } else if (to < from) {
         const {
             result: diff,
             earlierMillisecondsOfDay,
             laterMillisecondsOfDay,
-        } = _dateDiff(to, from, true);
+        } = calculateDateDiff(to, from, true);
 
-        const result = Object.assign(
-            diff,
-            _timeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay),
-        );
-
-        negativize(result);
-
-        return result;
+        return {
+            ...negateDateDiff(diff),
+            ...negateTimeDiff(calculateTimeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay)),
+        };
     } else {
         validateDates(from, to);
 
@@ -322,49 +322,40 @@ export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
 /**
  * Calculate the difference between two `Date` objects or timestamps.
  *
- * @param a a `Date` or a timestamp in milliseconds
- * @param b a `Date` or a timestamp in milliseconds
- * @returns the difference in days with the decimal part
- * @throws {RangeError} invalid date (or timestamp)
+ * @param a A `Date` or a timestamp in milliseconds
+ * @param b A `Date` or a timestamp in milliseconds
+ * @returns The difference in days with the decimal part
+ * @throws {RangeError} Invalid date (or timestamp)
  */
-export const dayDiff = (a: Date | number, b: Date | number): number => _dayDiff(datesToTimestampsWithValidation(a, b));
+export const dayDiff = (a: Date | number, b: Date | number): number =>
+    calculateDayDiff(datesToTimestampsWithValidation(a, b));
 
 /**
  * Calculate the difference between two `Date` objects or timestamps.
  *
- * @returns a key-value object whose keys are `days` and time units (`hours`, `minutes`, etc.) and all values are integers
- * @throws {RangeError} invalid date (or timestamp)
+ * @returns A key-value object whose keys are `days` and time units (`hours`, `minutes`, etc.) and
+ *   all values are integers
+ * @throws {RangeError} Invalid date (or timestamp)
  */
-export const dayTimeDiff = (
-    a: Date | number,
-    b: Date | number,
-): DayTimeDiffResult => {
+export const dayTimeDiff = (a: Date | number, b: Date | number): DayTimeDiffResult => {
     const t = datesToTimestampsWithValidation(a, b);
 
     if (t.b > t.a) {
-        const days = Math.floor(_dayDiff(t));
+        const days = Math.floor(calculateDayDiff(t));
 
         return {
             days: days,
-            ..._timeDiff(
-                _timeMillisecondsOfDay(t.a),
-                _timeMillisecondsOfDay(t.b),
-            ),
+            ...calculateTimeDiff(utcMillisecondsOfDay(t.a), utcMillisecondsOfDay(t.b)),
         };
     } else if (t.b < t.a) {
-        const days = Math.floor(_dayDiff({ a: t.b, b: t.a }));
+        const days = Math.floor(calculateDayDiff({ a: t.b, b: t.a }));
 
-        const result = {
-            days: days,
-            ..._timeDiff(
-                _timeMillisecondsOfDay(t.b),
-                _timeMillisecondsOfDay(t.a),
+        return {
+            days: negate(days),
+            ...negateTimeDiff(
+                calculateTimeDiff(utcMillisecondsOfDay(t.b), utcMillisecondsOfDay(t.a)),
             ),
         };
-
-        negativize(result);
-
-        return result;
     } else {
         return {
             days: 0,

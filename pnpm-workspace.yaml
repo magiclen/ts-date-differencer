@@ -1,0 +1,4 @@
+allowBuilds:
+    esbuild: false
+minimumReleaseAgeExclude:
+    - year-helper@0.4.0
