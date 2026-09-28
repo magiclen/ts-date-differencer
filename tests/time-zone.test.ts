@@ -1,10 +1,29 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { addDateTimeDiff, dateDiff, dateTimeDiff } from "../src/index.ts";
+import {
+    addDateTimeDiff,
+    addDayTimeDiff,
+    dateDiff,
+    dateTimeDiff,
+    dayTimeDiff,
+} from "../src/index.ts";
 
 // Each test file runs in its own process, so this does not affect other test files.
 process.env.TZ = "America/New_York";
+
+const randomDate = (): Date => new Date(Math.trunc(Math.random() * 3000000000000) - 1000000000000);
+
+// Compare the wall-clock fields instead of the timestamps, because a wall-clock time in a DST overlap maps to two timestamps.
+const getWallClockFields = (date: Date): number[] => [
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+    date.getMilliseconds(),
+];
 
 describe("DST overlap", () => {
     it("uses the wall-clock time", () => {
@@ -31,6 +50,63 @@ describe("DST overlap", () => {
             seconds: 0,
             milliseconds: 0,
         });
+    });
+});
+
+describe("DST gap", () => {
+    it("counts calendar days in dateTimeDiff and 24-hour days in dayTimeDiff", () => {
+        // 2024-03-10 has only 23 hours because 02:00 to 03:00 is skipped.
+        const a = new Date(2024, 3 - 1, 9, 12);
+        const b = new Date(2024, 3 - 1, 10, 12);
+
+        assert.deepEqual(dateTimeDiff(a, b), {
+            years: 0,
+            months: 0,
+            days: 1,
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            milliseconds: 0,
+        });
+        assert.deepEqual(dayTimeDiff(a, b), {
+            days: 0,
+            hours: 23,
+            minutes: 0,
+            seconds: 0,
+            milliseconds: 0,
+        });
+    });
+
+    it("moves a result in the gap forward", () => {
+        // 2024-03-10 02:30 does not exist, so it becomes 03:30 EDT.
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 3 - 1, 9, 2, 30), { days: 1 }),
+            new Date("2024-03-10T03:30:00-04:00"),
+        );
+    });
+});
+
+describe("add diff back", () => {
+    it("addDateTimeDiff (randomly run tests for 1000 times)", () => {
+        for (let i = 0; i < 1000; i++) {
+            const a = randomDate();
+            const b = randomDate();
+
+            const diff = dateTimeDiff(a, b);
+
+            assert.deepEqual(getWallClockFields(addDateTimeDiff(a, diff)), getWallClockFields(b));
+        }
+    });
+
+    it("addDayTimeDiff (randomly run tests for 1000 times)", () => {
+        for (let i = 0; i < 1000; i++) {
+            const a = randomDate();
+            const b = randomDate();
+
+            const diff = dayTimeDiff(a, b);
+
+            assert.deepEqual(addDayTimeDiff(a, diff), b);
+        }
     });
 });
 

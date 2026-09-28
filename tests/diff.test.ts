@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { runInNewContext } from "node:vm";
 
 import type { DateDiffResult, DateTimeDiffResult, DayTimeDiffResult } from "../src/index.ts";
 import {
@@ -10,6 +11,9 @@ import {
     dayDiff,
     dayTimeDiff,
 } from "../src/index.ts";
+
+// The expected values of the fixed dates below assume a time zone without DST, so fix the time zone. Each test file runs in its own process, so this does not affect other test files.
+process.env.TZ = "Asia/Taipei";
 
 const randomDate = (): Date => new Date(Math.trunc(Math.random() * 3000000000000) - 1000000000000);
 
@@ -998,5 +1002,22 @@ describe("years from 0 to 99", () => {
     it("addDateTimeDiff", () => {
         assert.deepEqual(addDateTimeDiff(createDate(50, 1, 1), { years: 1 }), createDate(51, 1, 1));
         assert.deepEqual(addDateTimeDiff(createDate(0, 2, 29), {}), createDate(0, 2, 29));
+    });
+});
+
+const isDate = (value: unknown): value is Date =>
+    Object.prototype.toString.call(value) === "[object Date]";
+
+describe("Date from another realm", () => {
+    it("works like a Date of this realm", () => {
+        // A `Date` created by `node:vm` comes from another realm, like a `Date` from an iframe.
+        const from: unknown = runInNewContext("new Date(2024, 0, 1)");
+        const to: unknown = runInNewContext("new Date(2024, 0, 2)");
+
+        assert.ok(isDate(from) && isDate(to));
+        assert.equal(from instanceof Date, false);
+
+        assert.deepEqual(dateDiff(from, to), zeroDate({ days: 1 }));
+        assert.deepEqual(dayTimeDiff(from, to), zeroDayTime({ days: 1 }));
     });
 });
