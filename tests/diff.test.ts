@@ -13,6 +13,26 @@ import {
 
 const randomDate = (): Date => new Date(Math.trunc(Math.random() * 3000000000000) - 1000000000000);
 
+// `new Date` treats the years from 0 to 99 as 1900 to 1999, so set the date again with the full year.
+const createDate = (year: number, month: number, date: number): Date => {
+    const result = new Date(year, month - 1, date);
+
+    result.setFullYear(year, month - 1, date);
+
+    return result;
+};
+
+// Compare the wall-clock fields instead of the timestamps, because a wall-clock time in a DST overlap maps to two timestamps.
+const getWallClockFields = (date: Date): number[] => [
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+    date.getMilliseconds(),
+];
+
 const zeroDate = (overwrite?: Partial<DateDiffResult>): DateDiffResult => ({
     years: 0,
     months: 0,
@@ -862,7 +882,7 @@ describe("add diff back", () => {
 
             const diff = dateTimeDiff(a, b);
 
-            assert.deepEqual(addDateTimeDiff(a, diff), b);
+            assert.deepEqual(getWallClockFields(addDateTimeDiff(a, diff)), getWallClockFields(b));
         }
     });
 
@@ -935,5 +955,48 @@ describe("add large diff", () => {
             addDayTimeDiff(new Date(2000, 1 - 1, 5), { milliseconds: 1001 }),
             new Date(2000, 1 - 1, 5, 0, 0, 1, 1),
         );
+    });
+});
+
+describe("add diff with borrow and carry", () => {
+    it("negative whole units", () => {
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 1 - 1, 15), { months: -12 }),
+            new Date(2023, 1 - 1, 15),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 3 - 1, 10), { hours: -24 }),
+            new Date(2024, 3 - 1, 9),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 3 - 1, 10, 1, 30), { minutes: -90 }),
+            new Date(2024, 3 - 1, 10),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 3 - 1, 10, 5, 6), { seconds: -60 }),
+            new Date(2024, 3 - 1, 10, 5, 5),
+        );
+    });
+
+    it("milliseconds", () => {
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 1 - 1, 1, 0, 0, 1), { milliseconds: -940 }),
+            new Date(2024, 1 - 1, 1, 0, 0, 0, 60),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 1 - 1, 1, 0, 0, 1), { milliseconds: -1000 }),
+            new Date(2024, 1 - 1, 1),
+        );
+        assert.deepEqual(
+            addDateTimeDiff(new Date(2024, 1 - 1, 1, 0, 0, 0, 999), { milliseconds: 1 }),
+            new Date(2024, 1 - 1, 1, 0, 0, 1),
+        );
+    });
+});
+
+describe("years from 0 to 99", () => {
+    it("addDateTimeDiff", () => {
+        assert.deepEqual(addDateTimeDiff(createDate(50, 1, 1), { years: 1 }), createDate(51, 1, 1));
+        assert.deepEqual(addDateTimeDiff(createDate(0, 2, 29), {}), createDate(0, 2, 29));
     });
 });

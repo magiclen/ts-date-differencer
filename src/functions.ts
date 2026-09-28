@@ -1,6 +1,13 @@
 // `0 - value` gives `0` instead of `-0` when `value` is `0`.
 export const negate = (value: number): number => 0 - value;
 
+// Floor division and its remainder, like `div_euclid` and `rem_euclid` in Rust when `divisor` is positive, so a negative `dividend` borrows the right amount.
+export const floorDiv = (dividend: number, divisor: number): number =>
+    Math.floor(dividend / divisor);
+
+export const floorMod = (dividend: number, divisor: number): number =>
+    dividend - divisor * floorDiv(dividend, divisor);
+
 const validateDate = (a: Date): void => {
     if (isNaN(a.getTime())) {
         throw new RangeError("invalid date");

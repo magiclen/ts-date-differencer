@@ -1,7 +1,14 @@
 import { getDaysInMonth } from "year-helper";
 
+import {
+    DAY_MILLISECONDS,
+    HOUR_MILLISECONDS,
+    MINUTE_MILLISECONDS,
+    SECOND_MILLISECONDS,
+} from "./constants.ts";
 import { datesToTimestampsWithValidation, negate, validateDates } from "./functions.ts";
 
+/** The time part of a difference. */
 export interface TimeDiffResult {
     hours: number;
     minutes: number;
@@ -9,18 +16,60 @@ export interface TimeDiffResult {
     milliseconds: number;
 }
 
+/** The result of the `dateDiff` function. */
 export interface DateDiffResult {
     years: number;
     months: number;
     days: number;
 }
 
+/** The day part of a difference. */
 export interface DayDiffResult {
     days: number;
 }
 
+/** The result of the `dateTimeDiff` function. */
 export interface DateTimeDiffResult extends DateDiffResult, TimeDiffResult {}
+
+/** The result of the `dayTimeDiff` function. */
 export interface DayTimeDiffResult extends DayDiffResult, TimeDiffResult {}
+
+/** The wall-clock date and time of a `Date`. */
+interface WallClock {
+    year: number;
+    /** From `1` to `12`. */
+    month: number;
+    day: number;
+    millisecondsOfDay: number;
+}
+
+const getWallClock = (date: Date): WallClock => ({
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+    millisecondsOfDay:
+        date.getHours() * HOUR_MILLISECONDS +
+        date.getMinutes() * MINUTE_MILLISECONDS +
+        date.getSeconds() * SECOND_MILLISECONDS +
+        date.getMilliseconds(),
+});
+
+// Compare the fields in the order of year, month, day and time of day, like the derived `Ord` of `WallClock` in the Rust version.
+const compareWallClock = (a: WallClock, b: WallClock): number => {
+    if (a.year !== b.year) {
+        return a.year - b.year;
+    }
+
+    if (a.month !== b.month) {
+        return a.month - b.month;
+    }
+
+    if (a.day !== b.day) {
+        return a.day - b.day;
+    }
+
+    return a.millisecondsOfDay - b.millisecondsOfDay;
+};
 
 const negateDateDiff = (diff: DateDiffResult): DateDiffResult => ({
     years: negate(diff.years),
@@ -36,14 +85,14 @@ const negateTimeDiff = (diff: TimeDiffResult): TimeDiffResult => ({
 });
 
 const millisecondsToUnits = (milliseconds: number): TimeDiffResult => {
-    const hours = Math.floor(milliseconds / 3600000);
-    milliseconds -= hours * 3600000;
+    const hours = Math.floor(milliseconds / HOUR_MILLISECONDS);
+    milliseconds -= hours * HOUR_MILLISECONDS;
 
-    const minutes = Math.floor(milliseconds / 60000);
-    milliseconds -= minutes * 60000;
+    const minutes = Math.floor(milliseconds / MINUTE_MILLISECONDS);
+    milliseconds -= minutes * MINUTE_MILLISECONDS;
 
-    const seconds = Math.floor(milliseconds / 1000);
-    milliseconds -= seconds * 1000;
+    const seconds = Math.floor(milliseconds / SECOND_MILLISECONDS);
+    milliseconds -= seconds * SECOND_MILLISECONDS;
 
     return {
         hours,
@@ -56,54 +105,29 @@ const millisecondsToUnits = (milliseconds: number): TimeDiffResult => {
 const calculateTimeDiff = (
     earlierMillisecondsOfDay: number,
     laterMillisecondsOfDay: number,
-): TimeDiffResult => {
-    let milliseconds = laterMillisecondsOfDay - earlierMillisecondsOfDay;
+): TimeDiffResult =>
+    millisecondsToUnits(
+        laterMillisecondsOfDay >= earlierMillisecondsOfDay
+            ? laterMillisecondsOfDay - earlierMillisecondsOfDay
+            : DAY_MILLISECONDS + laterMillisecondsOfDay - earlierMillisecondsOfDay,
+    );
 
-    if (laterMillisecondsOfDay < earlierMillisecondsOfDay) {
-        milliseconds += 86400000;
-    }
-
-    return millisecondsToUnits(milliseconds);
-};
-
-const localMillisecondsOfDay = (date: Date): number =>
-    date.getHours() * 3600000 +
-    date.getMinutes() * 60000 +
-    date.getSeconds() * 1000 +
-    date.getMilliseconds();
-const utcMillisecondsOfDay = (timestamp: number): number => {
-    if (timestamp >= 0) {
-        return timestamp % 86400000;
-    } else {
-        let t = 86400000 + (timestamp % 86400000);
-
-        if (t === 86400000) {
-            t = 0;
-        }
-
-        return t;
-    }
-};
-
+// `earlier` must be earlier than `later`. The date moves from `earlier` to `later`, or from `later` back to `earlier` if `startFromLater` is `true`.
 const calculateDateDiff = (
-    earlier: Date,
-    later: Date,
+    earlier: WallClock,
+    later: WallClock,
     startFromLater: boolean,
-): {
-    earlierMillisecondsOfDay: number;
-    laterMillisecondsOfDay: number;
-    result: DateDiffResult;
-} => {
-    let earlierYear = earlier.getFullYear();
-    let earlierMonth = earlier.getMonth() + 1;
-    let earlierDate = earlier.getDate();
+): DateDiffResult => {
+    let earlierYear = earlier.year;
+    let earlierMonth = earlier.month;
+    let earlierDate = earlier.day;
 
-    let laterYear = later.getFullYear();
-    let laterMonth = later.getMonth() + 1;
-    let laterDate = later.getDate();
+    let laterYear = later.year;
+    let laterMonth = later.month;
+    let laterDate = later.day;
 
-    const laterMillisecondsOfDay = localMillisecondsOfDay(later);
-    const earlierMillisecondsOfDay = localMillisecondsOfDay(earlier);
+    const laterMillisecondsOfDay = later.millisecondsOfDay;
+    const earlierMillisecondsOfDay = earlier.millisecondsOfDay;
 
     let years;
     let months;
@@ -237,35 +261,48 @@ const calculateDateDiff = (
     }
 
     return {
-        earlierMillisecondsOfDay,
-        laterMillisecondsOfDay,
-        result: {
-            years,
-            months,
-            days,
-        },
+        years,
+        months,
+        days,
     };
 };
 
-const calculateDayDiff = (t: { a: number; b: number }): number => (t.b - t.a) / 86400000;
+const calculateDateTimeDiff = (
+    earlier: WallClock,
+    later: WallClock,
+    startFromLater: boolean,
+): DateTimeDiffResult => ({
+    ...calculateDateDiff(earlier, later, startFromLater),
+    ...calculateTimeDiff(earlier.millisecondsOfDay, later.millisecondsOfDay),
+});
+
+// `milliseconds` must not be negative.
+const calculateDayTimeDiff = (milliseconds: number): DayTimeDiffResult => ({
+    days: Math.floor(milliseconds / DAY_MILLISECONDS),
+    ...millisecondsToUnits(milliseconds % DAY_MILLISECONDS),
+});
 
 /**
- * Calculate the difference between two `Date` objects.
+ * Calculate the difference between two `Date` objects in years, months and days.
  *
- * @returns A key-value object whose keys are date units (in `years`, `months`, etc.) and all values
- *   are integers
+ * The result is positive when `to` is later than `from`, and negative when `to` is earlier than
+ * `from`. The result is calculated with the wall-clock date and time in the local time zone. Only
+ * complete days are counted, so a remaining time shorter than a day is dropped.
+ *
  * @throws {RangeError} Invalid date
  */
 export const dateDiff = (from: Date, to: Date): DateDiffResult => {
-    if (to > from) {
-        return calculateDateDiff(from, to, false).result;
-    } else if (to < from) {
-        const result = calculateDateDiff(to, from, true).result;
+    validateDates(from, to);
 
-        return negateDateDiff(result);
+    const fromWallClock = getWallClock(from);
+    const toWallClock = getWallClock(to);
+    const ordering = compareWallClock(toWallClock, fromWallClock);
+
+    if (ordering > 0) {
+        return calculateDateDiff(fromWallClock, toWallClock, false);
+    } else if (ordering < 0) {
+        return negateDateDiff(calculateDateDiff(toWallClock, fromWallClock, true));
     } else {
-        validateDates(from, to);
-
         return {
             years: 0,
             months: 0,
@@ -275,38 +312,31 @@ export const dateDiff = (from: Date, to: Date): DateDiffResult => {
 };
 
 /**
- * Calculate the difference between two `Date` objects.
+ * Calculate the difference between two `Date` objects in years, months, days, hours, minutes,
+ * seconds and milliseconds.
  *
- * @returns A key-value object whose keys are date-time units (in `years`, `months`, `hours`, etc.)
- *   and all values are integers
+ * The result is positive when `to` is later than `from`, and negative when `to` is earlier than
+ * `from`. The result is calculated with the wall-clock date and time in the local time zone.
+ *
  * @throws {RangeError} Invalid date
  */
 export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
-    if (to > from) {
-        const {
-            result: diff,
-            earlierMillisecondsOfDay,
-            laterMillisecondsOfDay,
-        } = calculateDateDiff(from, to, false);
+    validateDates(from, to);
 
-        return Object.assign(
-            diff,
-            calculateTimeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay),
-        );
-    } else if (to < from) {
-        const {
-            result: diff,
-            earlierMillisecondsOfDay,
-            laterMillisecondsOfDay,
-        } = calculateDateDiff(to, from, true);
+    const fromWallClock = getWallClock(from);
+    const toWallClock = getWallClock(to);
+    const ordering = compareWallClock(toWallClock, fromWallClock);
+
+    if (ordering > 0) {
+        return calculateDateTimeDiff(fromWallClock, toWallClock, false);
+    } else if (ordering < 0) {
+        const diff = calculateDateTimeDiff(toWallClock, fromWallClock, true);
 
         return {
             ...negateDateDiff(diff),
-            ...negateTimeDiff(calculateTimeDiff(earlierMillisecondsOfDay, laterMillisecondsOfDay)),
+            ...negateTimeDiff(diff),
         };
     } else {
-        validateDates(from, to);
-
         return {
             years: 0,
             months: 0,
@@ -320,49 +350,41 @@ export const dateTimeDiff = (from: Date, to: Date): DateTimeDiffResult => {
 };
 
 /**
- * Calculate the difference between two `Date` objects or timestamps.
+ * Calculate the difference between two `Date` objects or timestamps in days.
+ *
+ * A day is always 24 hours, so the result does not depend on the time zone.
  *
  * @param a A `Date` or a timestamp in milliseconds
  * @param b A `Date` or a timestamp in milliseconds
  * @returns The difference in days with the decimal part
  * @throws {RangeError} Invalid date (or timestamp)
  */
-export const dayDiff = (a: Date | number, b: Date | number): number =>
-    calculateDayDiff(datesToTimestampsWithValidation(a, b));
+export const dayDiff = (a: Date | number, b: Date | number): number => {
+    const t = datesToTimestampsWithValidation(a, b);
+
+    return (t.b - t.a) / DAY_MILLISECONDS;
+};
 
 /**
- * Calculate the difference between two `Date` objects or timestamps.
+ * Calculate the difference between two `Date` objects or timestamps in days, hours, minutes,
+ * seconds and milliseconds.
  *
- * @returns A key-value object whose keys are `days` and time units (`hours`, `minutes`, etc.) and
- *   all values are integers
+ * A day is always 24 hours, so the result does not depend on the time zone.
+ *
  * @throws {RangeError} Invalid date (or timestamp)
  */
 export const dayTimeDiff = (a: Date | number, b: Date | number): DayTimeDiffResult => {
     const t = datesToTimestampsWithValidation(a, b);
+    const milliseconds = t.b - t.a;
 
-    if (t.b > t.a) {
-        const days = Math.floor(calculateDayDiff(t));
-
-        return {
-            days: days,
-            ...calculateTimeDiff(utcMillisecondsOfDay(t.a), utcMillisecondsOfDay(t.b)),
-        };
-    } else if (t.b < t.a) {
-        const days = Math.floor(calculateDayDiff({ a: t.b, b: t.a }));
-
-        return {
-            days: negate(days),
-            ...negateTimeDiff(
-                calculateTimeDiff(utcMillisecondsOfDay(t.b), utcMillisecondsOfDay(t.a)),
-            ),
-        };
+    if (milliseconds >= 0) {
+        return calculateDayTimeDiff(milliseconds);
     } else {
+        const diff = calculateDayTimeDiff(-milliseconds);
+
         return {
-            days: 0,
-            hours: 0,
-            minutes: 0,
-            seconds: 0,
-            milliseconds: 0,
+            days: negate(diff.days),
+            ...negateTimeDiff(diff),
         };
     }
 };
